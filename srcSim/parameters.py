@@ -1,4 +1,4 @@
-from ANNarchy import LogNormal
+from ANNarchy import LogNormal, Uniform
 import numpy as np
 
 rng = np.random.default_rng()
@@ -40,10 +40,11 @@ params['input_tau'] = 10000#how many miliseconds to increase input current by th
 
 ### Populations
 params['corE_popsize'] = 200
-params['inputPop_init_offsetVal'] = rng.lognormal(mean=1.2, sigma=1.1, size=params['corE_popsize'])# lognormal dist with peak at 1 with height 0.2
-params['inputPop_init_offsetVal'] = rng.normal(loc=50, scale=15, size=params['corE_popsize'])
+params['inputPop_init_offsetVal'] = 60+rng.lognormal(mean=1.2, sigma=1.1, size=params['corE_popsize'])# lognormal dist with peak at 1 with height 0.2
+#params['inputPop_init_offsetVal'] = rng.normal(loc=60, scale=15, size=params['corE_popsize'])
 params['inputPop_init_increaseVal'] = 0#params['inputPop_init_offsetVal']
 
 ### Projections
 params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93)
+params['numInputs']  = 20
 

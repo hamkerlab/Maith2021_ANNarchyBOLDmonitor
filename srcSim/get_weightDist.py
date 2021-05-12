@@ -1,6 +1,7 @@
 from ANNarchy import *
 import pylab as plt
 from scipy import signal, stats
+from extras import lognormalPDF
 
 rng = np.random.default_rng()
 setup(dt=0.1)
@@ -122,13 +123,11 @@ compile()
 
 
 ### compare weight distribution with target EPSP distribution
-def targetDist(x, mu=-0.702, sigma=0.9355):
-    return (0.426/x)*np.exp(-(np.log(x)+0.702)**2/(2*0.9355**2))#(np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2)) / (x * sigma * np.sqrt(2 * np.pi)))#
 
 plt.figure()
 x=np.arange(0.01,10,0.01)
 plt.hist(np.array(inputPopcorE.w).flatten(), 100, density=True, align='mid')
-plt.plot(x,targetDist(x))
+plt.plot(x,lognormalPDF(x))
 plt.xlim(0,10)
 plt.savefig('../results/get_weightDist_weightsE_dist.svg')
 
@@ -196,11 +195,11 @@ PSPsI=maxValI[maxValE<0]+55
 plt.figure()
 plt.subplot(211)
 plt.hist(PSPsE[PSPsE<=10], 100, density=True, align='mid')
-plt.plot(x,targetDist(x))
+plt.plot(x,lognormalPDF(x))
 plt.xlim(0,10)
 plt.subplot(212)
 plt.hist(PSPsI[PSPsI<=10], 100, density=True, align='mid')
-plt.plot(x,targetDist(x))
+plt.plot(x,lognormalPDF(x))
 plt.xlim(0,10)
 plt.savefig('../results/get_weightDist_PSP_dist.svg')
 

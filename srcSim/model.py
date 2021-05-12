@@ -27,7 +27,7 @@ Izhikevich2007RS = Neuron(
         tau_ampa = 'tau_ampa'  : population
         tau_gaba = 'tau_gaba'  : population
         E_ampa   = 'E_ampa'    : population
-        E_gaba   = 'E_ampa'    : population
+        E_gaba   = 'E_gaba'    : population
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
@@ -61,7 +61,7 @@ Izhikevich2007FS = Neuron(
         tau_ampa = 'tau_ampa'  : population
         tau_gaba = 'tau_gaba'  : population
         E_ampa   = 'E_ampa'    : population
-        E_gaba   = 'E_ampa'    : population
+        E_gaba   = 'E_gaba'    : population
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
@@ -119,21 +119,21 @@ inputPop.increaseVal=params['inputPop_init_increaseVal']
 inputPop_corEL1 = CurrentInjection(inputPop, corEL1, 'exc', name='inputPop_corEL1')
 inputPop_corEL1.connect_current()
 
-### Exc transmission from L1 to L2
+"""### Exc transmission from L1 to L2
 corEL1_corEL2 = Projection(pre=corEL1, post=corEL2, target='ampa', name='corEL1_corEL2')
-corEL1_corEL2.connect_all_to_all(weights = params['weightDist'])
+corEL1_corEL2.connect_all_to_all(weights = params['weightDist'])"""
 
 ### Inh loop in L1
-"""corEL1_corIL1 = Projection(pre=corEL1, post=corIL1, target='ampa', name='corEL1_corIL1')
-corEL1_corIL1.connect_all_to_all(weights = params['weightDist'])
+corEL1_corIL1 = Projection(pre=corEL1, post=corIL1, target='ampa', name='corEL1_corIL1')
+corEL1_corIL1.connect_all_to_all(weights=params['weightDist'])#connect_fixed_number_pre(number = params['numInputs'], weights=params['weightDist'], force_multiple_weights=True)
 
 corIL1_corEL1 = Projection(pre=corIL1, post=corEL1, target='gaba', name='corIL1_corEL1')
-corIL1_corEL1.connect_all_to_all(weights = params['weightDist'])
+corIL1_corEL1.connect_all_to_all(weights=params['weightDist'])#connect_fixed_number_pre(number = params['numInputs'], weights=params['weightDist'], force_multiple_weights=True)
 
 corIL1_corIL1 = Projection(pre=corIL1, post=corIL1, target='gaba', name='corIL1_corIL1')
-corIL1_corIL1.connect_all_to_all(weights = params['weightDist'])
-
-### Inh loop in L2
+corIL1_corIL1.connect_all_to_all(weights=params['weightDist'])#connect_fixed_number_pre(number = params['numInputs'], weights=params['weightDist'], force_multiple_weights=True)
+### TODO play with input strength and number of connections to obtain firing rate distribution in EL1 and IL1
+"""### Inh loop in L2
 corEL2_corIL2 = Projection(pre=corEL2, post=corIL2, target='ampa', name='corEL2_corIL2')
 corEL2_corIL2.connect_all_to_all(weights = params['weightDist'])
 
