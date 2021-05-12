@@ -1,0 +1,8 @@
+### specific folders
+*annarchy*/
+*__pycache__/
+
+### specific files
+*.npy
+*test.svg
+*test.png
