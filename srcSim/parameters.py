@@ -45,6 +45,6 @@ params['inputPop_init_offsetVal'] = 60+rng.lognormal(mean=1.2, sigma=1.1, size=p
 params['inputPop_init_increaseVal'] = 0#params['inputPop_init_offsetVal']
 
 ### Projections
-params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93)
+params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93, max=2)
 params['numInputs']  = 20
 

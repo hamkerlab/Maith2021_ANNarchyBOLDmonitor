@@ -23,7 +23,7 @@ compile()
 #get_projection('corIL1_corIL1').w=rng.lognormal(-1.5,0.93,(params['corE_popsize']//4,params['numInputs']))
 
 #get_projection('corEL1_corIL1').w=np.zeros((params['corE_popsize']//4,params['corE_popsize']))
-get_projection('corIL1_corEL1').w=np.zeros((params['corE_popsize'],params['corE_popsize']//4))
+#get_projection('corIL1_corEL1').w=np.zeros((params['corE_popsize'],params['corE_popsize']//4))
 #get_projection('corIL1_corIL1').w=np.zeros((params['corE_popsize']//4,params['corE_popsize']//4-1))
 
 simulate(20000)
