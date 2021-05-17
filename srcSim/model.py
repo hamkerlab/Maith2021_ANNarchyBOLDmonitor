@@ -146,7 +146,8 @@ corIL2_corIL2.connect_all_to_all(weights = params['weightDist'])"""
 
 
 
-
+#compile()
+#simulate(10)
 
 
 

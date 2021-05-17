@@ -17,6 +17,7 @@ import multiprocessing
 
 ### standard model compilation
 simID=int(sys.argv[1])
+mode='test'
 compile('annarchy'+str(simID))
 
 
@@ -36,7 +37,7 @@ def set_number_of_synapses(weights, number):
 
 ### DEFINE SIMULATOR
 def simulator(fitparams, m_list):
-    plotting=False
+    plotting=True
 
     ### get params
     init_offsetVal = fitparams[0]+rng.lognormal(mean=fitparams[1], sigma=fitparams[2], size=params['corE_popsize'])
@@ -108,7 +109,7 @@ def simulator(fitparams, m_list):
         plt.subplot(224)
         t,n = raster_plot(recordings['corIL1;spike'])
         plt.plot(t,n,'k.',markersize=0.2)
-        plt.savefig('test1.png')
+        plt.savefig('test1_'+str(simID)+'.png')
 
 
         ### plot2
@@ -131,7 +132,7 @@ def simulator(fitparams, m_list):
         plt.plot(x, lognormalPDF(x, mu=1.2, sigma=1.1))
         plt.plot(x, lognormalPDF(x, mu=obtained[1][0], sigma=obtained[1][1], shift=obtained[1][2]), ls='dashed')
         #plt.xlim(10**-3,30)
-        plt.savefig('test2.svg')
+        plt.savefig('test2_'+str(simID)+'.svg')
 
     m_list[0]=loss
     m_list[1]=obtained
@@ -155,24 +156,32 @@ def run_simulator(fitparams):
         'status': STATUS_OK,
         'obtained': obtained
         }
+        
+def testFit(fitparamsDict):
+    m_list=[1,2,3]
+    return simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']], m_list)
+    #return run_simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']])
 
 
-"""result=run_simulator([-80,1.2,1.1,3000])
-print(result['obtained'], result['loss'])"""
-#scope.int(hp.quniform('number synapses', 5, 50, q=1))
-#hp.uniform('number synapses', 5, 50),        
-
-### RUN OPTIMIZATION
-best = fmin(
-    fn=run_simulator,
-    space=[
-        hp.uniform('shift', 40, 150),
-        hp.uniform('mean', 0, 3),
-        hp.uniform('sigma', 0.1, 2),
-        scope.int(hp.quniform('number synapses', 5, 49, q=1))
-    ],
-    algo=tpe.suggest,
-    max_evals=1000)
-
-print(best)
-np.save('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy',best)
+if mode=='optimize':
+    ### RUN OPTIMIZATION
+    best = fmin(
+        fn=run_simulator,
+        space=[
+            hp.uniform('shift', 40, 150),
+            hp.uniform('mean', 0, 3),
+            hp.uniform('sigma', 0.1, 2),
+            scope.int(hp.quniform('number synapses', 5, 49, q=1))
+        ],
+        algo=tpe.suggest,
+        max_evals=1000)
+    best['loss'] = testFit(best)
+    np.save('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy',best)
+    
+if mode=='test':
+    fit=np.load('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
+    """results=0
+    for i in range(10):
+        result+=testFit(fit)['loss']#TODO would run 10 times exactly the same, should use different rng seeds"""
+    result=testFit(fit)
+    print(simID, fit, result)

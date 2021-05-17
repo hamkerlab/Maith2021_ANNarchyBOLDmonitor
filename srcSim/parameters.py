@@ -6,7 +6,7 @@ rng = np.random.default_rng()
 params={}
 ### general ANNarchy params
 params['dt'] = 0.1
-params['num_threads'] = 1
+params['num_threads'] = 18
 
 ### Neuron models
 ## conductance based synapses
