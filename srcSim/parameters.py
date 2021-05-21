@@ -1,12 +1,22 @@
 from ANNarchy import LogNormal, Uniform
 import numpy as np
+from extras import generateInputs
 
 rng = np.random.default_rng()
 
 params={}
 ### general ANNarchy params
 params['dt'] = 0.1
-params['num_threads'] = 18
+params['num_threads'] = 1
+params['optimizeRates'] = False
+params['increasingInputs'] = True
+if params['optimizeRates']:
+    ### just use some values for the parameters... they will be overwritten
+    params['fittedParams']= {'shift':60, 'mean':1.2, 'sigma':1.1, 'number synapses':20}
+else:
+    ### load fitted parameters
+    params['useFit'] = 13
+    params['fittedParams'] = np.load('../dataRaw/optimize_rates_obtainedParams'+str(params['useFit'])+'.npy', allow_pickle=True).item()
 
 ### Neuron models
 ## conductance based synapses
@@ -40,11 +50,13 @@ params['input_tau'] = 10000#how many miliseconds to increase input current by th
 
 ### Populations
 params['corE_popsize'] = 200
-params['inputPop_init_offsetVal'] = 60+rng.lognormal(mean=1.2, sigma=1.1, size=params['corE_popsize'])# lognormal dist with peak at 1 with height 0.2
-#params['inputPop_init_offsetVal'] = rng.normal(loc=60, scale=15, size=params['corE_popsize'])
-params['inputPop_init_increaseVal'] = 0#params['inputPop_init_offsetVal']
+params['inputPop_init_offsetVal'] = generateInputs(params['fittedParams']['shift'],params['fittedParams']['mean'],params['fittedParams']['sigma'],params['corE_popsize'],rng)['values']
+if params['increasingInputs']:
+    params['inputPop_init_increaseVal'] = params['inputPop_init_offsetVal']
+else:
+    params['inputPop_init_increaseVal'] = 0
 
 ### Projections
-params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93, max=2)
-params['numInputs']  = 20
+params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93, max=generateInputs(0,-1.5,0.93,1,rng)['threshold'])
+params['numInputs']  = params['fittedParams']['number synapses']
 

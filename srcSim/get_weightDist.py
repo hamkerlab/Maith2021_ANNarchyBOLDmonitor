@@ -1,81 +1,9 @@
 from ANNarchy import *
 import pylab as plt
 from scipy import signal, stats
+from model_neuronmodels import params, rng, Izhikevich2007RS, Izhikevich2007FS
 from extras import lognormalPDF
 
-rng = np.random.default_rng()
-setup(dt=0.1)
-
-
-### create both neuron types
-
-Izhikevich2007RS = Neuron(
-    parameters="""
-        C        = 100.   : population
-        k        =   0.70 : population
-        v_r      = -60.   : population
-        v_t      = -40.   : population
-        a        =   0.03 : population
-        b        =  -2.   : population
-        c        = -50.   : population
-        d        = 100.   : population
-        v_peak   =  35.   : population
-        tau_ampa =  10.   : population
-        tau_gaba =  10.   : population
-        E_ampa   =   0.   : population
-        E_gaba   = -90.   : population
-        I_ext    =   0.
-    """,
-    equations="""
-        dg_ampa/dt = -g_ampa/tau_ampa : init = 0
-        dg_gaba/dt = -g_gaba/tau_gaba : init = 0
-        I          = I_ext - g_ampa*(v - E_ampa) - g_gaba*(v - E_gaba)
-        C * dv/dt  = k*(v - v_r)*(v - v_t) - u + I : init = -60
-        du/dt      = a*(b*(v - v_r) - u) : init = 0
-    """,
-    spike = "v >= v_peak",
-    reset = """
-        v = c
-        u = u + d
-    """,
-    name = "Izhikevich2007RS",
-    description = "RS cortical neuron model from Izhikevich (2007) with additional conductance based synapses."
-)
-
-Izhikevich2007FS = Neuron(
-    parameters="""
-        C        =  20.    : population
-        k        =   1.    : population
-        v_r      = -55.    : population
-        v_t      = -40.    : population
-        v_b      = -55.    : population
-        a        =   0.2   : population
-        b        =   0.025 : population
-        c        = -45.    : population
-        d        =   0.    : population
-        v_peak   =  25.    : population
-        tau_ampa =  10.    : population
-        tau_gaba =  10.    : population
-        E_ampa   =   0.    : population
-        E_gaba   = -90.    : population
-        I_ext    =   0.
-    """,
-    equations="""
-        dg_ampa/dt = -g_ampa/tau_ampa : init = 0
-        dg_gaba/dt = -g_gaba/tau_gaba : init = 0
-        I          = I_ext - g_ampa*(v - E_ampa) - g_gaba*(v - E_gaba)
-        C * dv/dt  = k*(v - v_r)*(v - v_t) - u + I : init = -55
-        U_v        = if v<v_b: 0 else: b*(v - v_b)**3
-        du/dt      = a*(U_v - u) : init = 0
-    """,
-    spike = "v >= v_peak",
-    reset = """
-        v = c
-        u = u + d
-    """,
-    name = "Izhikevich2007FS",
-    description = "FS cortical interneuron model from Izhikevich (2007) with additional conductance based synapses."
-)
 
 ### create 1000 neurons of each neurontype
 corE = Population(1000, neuron=Izhikevich2007RS, name='CorE')
@@ -104,7 +32,11 @@ inputPopcorI = Projection(
     name = 'inputPopcorI'
 ).connect_all_to_all(weights = LogNormal(mu=-1.5, sigma=0.93))#weights scaled to obtain PSP dist
 
-"""#how new mu, sigma were obtained:
+
+"""
+### Define weights so that the PSP distribution looks like the target PSP population (see extras.lognormalPDF)
+
+#how new mu, sigma were obtained:
 #inputPopcorE --> weights * 0.5
 test=0.3*rng.lognormal(-0.7,0.93,10000)
 shape,loc,scale = stats.lognorm.fit(test)
@@ -123,12 +55,12 @@ compile()
 
 
 ### compare weight distribution with target EPSP distribution
-
 plt.figure()
 x=np.arange(0.01,10,0.01)
-plt.hist(np.array(inputPopcorE.w).flatten(), 100, density=True, align='mid')
-plt.plot(x,lognormalPDF(x))
+plt.hist(np.array(inputPopcorE.w).flatten(), 100, density=True, align='mid', label='weights')
+plt.plot(x, lognormalPDF(x), label='EPSPs Song et al. (2005)')
 plt.xlim(0,10)
+plt.legend()
 plt.savefig('../results/get_weightDist_weightsE_dist.svg')
 
 
@@ -137,7 +69,7 @@ mon_v_corE = Monitor(corE, 'v')
 mon_v_corI = Monitor(corI, 'v')
 
 
-### simulate 20 ms
+### simulate 100 ms
 simulate(100)
 
 
@@ -189,17 +121,19 @@ plt.savefig('../results/get_weightDist_PSPexamples.svg')
 ### calculate PSP distribution from membrane potentials
 
 ## difference between resting potential and peaks below 0
-PSPsE=maxValE[maxValE<0]+60
-PSPsI=maxValI[maxValE<0]+55
+PSPsE=maxValE[maxValE<0]-params['RS_v_r']
+PSPsI=maxValI[maxValE<0]-params['FS_v_r']
 
 plt.figure()
 plt.subplot(211)
-plt.hist(PSPsE[PSPsE<=10], 100, density=True, align='mid')
-plt.plot(x,lognormalPDF(x))
+plt.hist(PSPsE[PSPsE<=10], 100, density=True, align='mid', label='EPSPs in CorE')
+plt.plot(x,lognormalPDF(x), label='EPSPs Song et al. (2005)')
 plt.xlim(0,10)
+plt.legend()
 plt.subplot(212)
-plt.hist(PSPsI[PSPsI<=10], 100, density=True, align='mid')
-plt.plot(x,lognormalPDF(x))
+plt.hist(PSPsI[PSPsI<=10], 100, density=True, align='mid', label='EPSPs in CorI')
+plt.plot(x,lognormalPDF(x), label='EPSPs Song et al. (2005)')
 plt.xlim(0,10)
+plt.legend()
 plt.savefig('../results/get_weightDist_PSP_dist.svg')
 

@@ -3,8 +3,7 @@ import pylab as plt
 from scipy import stats
 import sys
 from model import params, rng
-from extras import getFiringRateDist
-from extras import lognormalPDF
+from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster
 
 # hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK
@@ -17,13 +16,15 @@ import multiprocessing
 
 ### standard model compilation
 simID=int(sys.argv[1])
-mode='test'
+mode=str(sys.argv[2])
 compile('annarchy'+str(simID))
 
 
 def set_number_of_synapses(weights, number):
     """
         weights: list (for each post neuron) of lists (list of weights to all pre neurons)
+        
+        For each postneuron (idx 0 in weights) sets random weights to zero, "number" weights are kept. Therefore, each neuron only has "number" effective inputs.
     """
     for idx, w in enumerate(weights):
         ### select "number" random indices in weight vector
@@ -36,7 +37,17 @@ def set_number_of_synapses(weights, number):
     return weights
 
 ### DEFINE SIMULATOR
-def simulator(fitparams, m_list):
+def simulator(fitparams, m_list=[0,0]):
+    """
+        fitparams: list
+            fitparams[0]: shift of logNormal distribution for the input current values of CorE
+            fitparams[1]: mean of logNormal distribution for the input current values of CorE
+            fitparams[2]: sigma of logNormal distribution for the input current values of CorE
+            fitparams[3]: general number of input synapses of all neurons
+            
+        m_list: variable to store results, from multiprocessing
+    """
+    ### should plots be generated?
     plotting=True
 
     ### get params
@@ -97,21 +108,8 @@ def simulator(fitparams, m_list):
 
     if plotting:
         ### plot1
-        plt.figure(figsize=(18,12))
-        plt.subplot(221)
-        for idx in range(recordings['inputPop;r'].shape[1]):
-            plt.plot(recordings['inputPop;r'][:,idx])
-
-        plt.subplot(223)
-        t,n = raster_plot(recordings['corEL1;spike'])
-        plt.plot(t,n,'k.',markersize=0.2)
-
-        plt.subplot(224)
-        t,n = raster_plot(recordings['corIL1;spike'])
-        plt.plot(t,n,'k.',markersize=0.2)
-        plt.savefig('test1_'+str(simID)+'.png')
-
-
+        plot_input_and_raster(recordings, 'optimize_rates_input_and_raster_'+str(simID)+'.png')
+        
         ### plot2
         for pop in ['corEL1', 'corIL1']:
             recordings[pop+';rateDist']=getFiringRateDist(recordings[pop+';spike'], 20000)
@@ -122,22 +120,28 @@ def simulator(fitparams, m_list):
         plt.subplot(211)
         plt.title('E')
         plt.hist(recordings['corEL1;rateDist'], 100, density=True, align='mid')
-        plt.plot(x,lognormalPDF(x, mu=1.2, sigma=1.1))
-        plt.plot(x, lognormalPDF(x, mu=obtained[0][0], sigma=obtained[0][1], shift=obtained[0][2]), ls='dashed')
-        #plt.xlim(10**-3,30)
+        plt.plot(x,lognormalPDF(x, mu=1.2, sigma=1.1), label='targetDist (Buzsaki & Mizuseki, 2014)')
+        plt.plot(x, lognormalPDF(x, mu=obtained[0][0], sigma=obtained[0][1], shift=obtained[0][2]), ls='dashed', label='simulatedDist')
+        plt.legend()
 
         plt.subplot(212)
         plt.title('I')
         plt.hist(recordings['corIL1;rateDist'], 100, density=True, align='mid')
-        plt.plot(x, lognormalPDF(x, mu=1.2, sigma=1.1))
-        plt.plot(x, lognormalPDF(x, mu=obtained[1][0], sigma=obtained[1][1], shift=obtained[1][2]), ls='dashed')
-        #plt.xlim(10**-3,30)
-        plt.savefig('test2_'+str(simID)+'.svg')
+        plt.plot(x, lognormalPDF(x, mu=1.2, sigma=1.1), label='targetDist (Buzsaki & Mizuseki, 2014)')
+        plt.plot(x, lognormalPDF(x, mu=obtained[1][0], sigma=obtained[1][1], shift=obtained[1][2]), ls='dashed', label='simulatedDist')
+        plt.legend()
+        plt.savefig('../results/optimize_rates_distributions_'+str(simID)+'.svg')
 
     m_list[0]=loss
     m_list[1]=obtained
 
 def run_simulator(fitparams):
+    """
+        runs the function simulator with the multiprocessing manager (if function is called sequentially, this stores memory, otherwise same as calling sumulator directly)
+        
+        fitparams: list, for description see function simulator
+        return: returns dictionary needed for optimization with hyperopt
+    """
     manager = multiprocessing.Manager()
     m_list = manager.dict()
 
@@ -157,10 +161,17 @@ def run_simulator(fitparams):
         'obtained': obtained
         }
         
+### TODO implement run_simulator_parallel function, which averages the loss over mnultiple runs (with different seeds), to mean over the random implementation (input curretn, which synapses are kept)
+        
 def testFit(fitparamsDict):
-    m_list=[1,2,3]
-    return simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']], m_list)
-    #return run_simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']])
+    """
+        fitparamsDict: dictionary with parameters, format = as hyperopt returns fit results
+        
+        Thus, this function can be used to run the simulator function directly with fitted parameters obtained with hyperopt
+        
+        Returns the loss computed in simulator function.
+    """
+    return run_simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']])['loss']
 
 
 if mode=='optimize':
@@ -176,12 +187,16 @@ if mode=='optimize':
         algo=tpe.suggest,
         max_evals=1000)
     best['loss'] = testFit(best)
+    
+    ### SAVE OPTIMIZED PARAMS AND LOSS
     np.save('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy',best)
     
 if mode=='test':
+    ### LOAD FITTED PARAMETERS
     fit=np.load('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
     """results=0
     for i in range(10):
         result+=testFit(fit)['loss']#TODO would run 10 times exactly the same, should use different rng seeds"""
+    ### PRINT LOSS
     result=testFit(fit)
     print(simID, fit, result)

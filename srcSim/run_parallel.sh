@@ -1,15 +1,15 @@
-python optimize_rates.py 1 &
-python optimize_rates.py 2 &
-python optimize_rates.py 3 &
-python optimize_rates.py 4 &
-python optimize_rates.py 5 &
-python optimize_rates.py 6 &
-python optimize_rates.py 7 &
-python optimize_rates.py 8 &
-python optimize_rates.py 9 &
-python optimize_rates.py 10 &
-python optimize_rates.py 11 &
-python optimize_rates.py 12 &
-python optimize_rates.py 13 &
-python optimize_rates.py 14 &
-python optimize_rates.py 15
+#python optimize_rates.py 1 test &
+#python optimize_rates.py 2 test &
+#python optimize_rates.py 3 test &
+#python optimize_rates.py 4 test &
+#python optimize_rates.py 5 test &
+#python optimize_rates.py 6 test &
+#python optimize_rates.py 7 test &
+#python optimize_rates.py 8 test &
+#python optimize_rates.py 9 test &
+#python optimize_rates.py 10 test &
+#python optimize_rates.py 11 test &
+#python optimize_rates.py 12 test &
+python optimize_rates.py 13 test &
+python optimize_rates.py 14 test &
+python optimize_rates.py 15 test

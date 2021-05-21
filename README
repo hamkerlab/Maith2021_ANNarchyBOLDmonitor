@@ -1,0 +1,31 @@
+srcSim/:
+    extras.py:
+        - functions which are used globally
+    parameters.py:
+        - parameters which are used globally
+    model_neuronmodels.py:
+        - defintion of RS and FS cortical neuron models
+    model.py:
+        - defintion of model (populations, projections)
+    get_weightDist.py:
+        - generate 1000 RS and FS cortical neurons
+        - send 1 input spike
+        - compares (Figures) distribution of caused PSPs in neurons with distribution of EPSPs from Song et al. (2005)
+        - the weight distributions should adjusted manually to obtain a got fit (visual comparison) betwenn simulated and experimetnal distributions
+    optimize_rates.py:
+        - two modes, optimize and test
+        - optimize mode:
+            - optimizes parameters (input current distribution and number of afferent synapses of all neurons)
+            - goodness of fit: simulated mean firing rate distribution vs. distribution similar to the firing rate distributions shown in Buzsáki & Mizuseki, (2014)
+            - saves fitted parameters and loss
+        - test mode:
+            - load fitted params and prints loss
+            - simulator optionally generates plots to also visually compare firing rate distributions
+        - possible improvements:
+            - connect with probabilities (part of the input pop) instead of fixed ammount (not more than 49 possible becasue of CorI size)
+            - or larger pop sizes
+            - calculate the loss over multiple initializations (average over randomness)
+    run_parallel.sh:
+        - shell script to run python files
+    test.py:
+        - python file for testing anything
