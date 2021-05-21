@@ -1,6 +1,6 @@
 import numpy as np
 import pylab as plt
-from ANNarchy import raster_plot
+from ANNarchy import *
 from scipy.stats import lognorm
 
 def lognormalPDF(x, mu=-0.702, sigma=0.9355, shift=0):
@@ -73,5 +73,41 @@ def generateInputs(a,b,c,d,rng):
         keptVals=keptVals+list(vals[vals<=maxVal])
 
     return {'values':np.array(keptVals)+a, 'threshold':maxVal+a}
+    
+def addMonitors(monDict,mon):
+    """
+        generate monitors defined by monDict
+        
+        monDict form:
+            {'pop;popName':list with variables to record,
+             ...}
+        currently only pop as compartments
+    """
+    for key, val in monDict.items():
+        compartmentType, compartment = key.split(';')
+        if compartmentType=='pop':
+            mon[compartment] = Monitor(get_population(compartment),val, start=False)
+    return mon
+    
+def startMonitors(monDict,mon):
+    """
+        start monitores defined by monDict
+    """
+    for key, val in monDict.items():
+        compartmentType, compartment = key.split(';')
+        if compartmentType=='pop':
+            mon[compartment].start()
+    
+def getMonitors(monDict,mon,recordings):
+    """
+        get recorded values from monitors
+        
+        monitors and recorded values defined by monDict
+    """
+    for key, val in monDict.items():
+        compartmentType, compartment = key.split(';')
+        for val_val in val:
+            recordings[compartment+';'+val_val] = mon[compartment].get(val_val)
+    return recordings
     
     

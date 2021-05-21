@@ -27,13 +27,21 @@ Izhikevich2007RS = Neuron(
         tau_gaba = 'tau_gaba'  : population
         E_ampa   = 'E_ampa'    : population
         E_gaba   = 'E_gaba'    : population
+        
+        tau_syn  = 'tau_syn'   : population
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
         dg_gaba/dt = -g_gaba/tau_gaba : init = 0
-        I          = g_exc - g_ampa*(v - E_ampa) - g_gaba*(v - E_gaba)
+        I_ampa     = -g_ampa*(v - E_ampa)
+        I_gaba     = -g_gaba*(v - E_gaba)
+        I          = g_exc + I_ampa + I_gaba
         C * dv/dt  = k*(v - v_r)*(v - v_t) - u + I : init = RS_v_r
         du/dt      = a*(b*(v - v_r) - u) : init = 0
+        
+        tau_syn*dsyn/dt = -syn
+        var_f = abs(I_ampa) + 1.5*abs(I_gaba)
+        var_r = abs(I_ampa) 
     """,
     spike = "v >= v_peak",
     reset = """
@@ -61,14 +69,22 @@ Izhikevich2007FS = Neuron(
         tau_gaba = 'tau_gaba'  : population
         E_ampa   = 'E_ampa'    : population
         E_gaba   = 'E_gaba'    : population
+        
+        tau_syn  = 'tau_syn'   : population
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
         dg_gaba/dt = -g_gaba/tau_gaba : init = 0
-        I          = g_exc - g_ampa*(v - E_ampa) - g_gaba*(v - E_gaba)
+        I_ampa     = -g_ampa*(v - E_ampa)
+        I_gaba     = -g_gaba*(v - E_gaba)
+        I          = g_exc + I_ampa + I_gaba
         C * dv/dt  = k*(v - v_r)*(v - v_t) - u + I : init = FS_v_r
         U_v        = if v<v_b: 0 else: b*(v - v_b)**3
         du/dt      = a*(U_v - u) : init = 0
+        
+        tau_syn*dsyn/dt = -syn
+        var_f = abs(I_ampa) + 1.5*abs(I_gaba)
+        var_r = abs(I_ampa) 
     """,
     spike = "v >= v_peak",
     reset = """

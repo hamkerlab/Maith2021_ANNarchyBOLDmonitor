@@ -3,7 +3,7 @@ import pylab as plt
 from scipy import stats
 import sys
 from model import params, rng
-from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster
+from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors, generateInputs
 
 # hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK
@@ -51,7 +51,7 @@ def simulator(fitparams, m_list=[0,0]):
     plotting=True
 
     ### get params
-    init_offsetVal = fitparams[0]+rng.lognormal(mean=fitparams[1], sigma=fitparams[2], size=params['corE_popsize'])
+    init_offsetVal = generateInputs(fitparams[0],fitparams[1],fitparams[2],params['corE_popsize'],rng)['values']
     number_of_synapses = int(fitparams[3])
 
     ### reset model to compilation state
@@ -62,10 +62,8 @@ def simulator(fitparams, m_list=[0,0]):
              'pop;corEL1':['v', 'spike'],
              'pop;corIL1':['v', 'spike']}
     mon={}
-    for key, val in monDict.items():
-        compartmentType, compartment = key.split(';')
-        if compartmentType=='pop':
-            mon[compartment] = Monitor(get_population(compartment),val)
+    mon = addMonitors(monDict,mon)
+    
 
     ### Set input strenght
     get_population('inputPop').offsetVal=init_offsetVal
@@ -76,13 +74,13 @@ def simulator(fitparams, m_list=[0,0]):
     get_projection('corIL1_corIL1').w=set_number_of_synapses(get_projection('corIL1_corIL1').w, number_of_synapses)
 
     ### simulate
+    startMonitors(monDict,mon)
     simulate(20000)
+    
     ### get monitors
     recordings={}
-    for key, val in monDict.items():
-        compartmentType, compartment = key.split(';')
-        for val_val in val:
-            recordings[compartment+';'+val_val] = mon[compartment].get(val_val)
+    recordings=getMonitors(monDict,mon,recordings)
+    
 
     ### get firing rate distributions
     loss=0

@@ -8,8 +8,8 @@ params={}
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
-params['optimizeRates'] = False
-params['increasingInputs'] = True
+params['optimizeRates'] = True
+params['increasingInputs'] = False
 if params['optimizeRates']:
     ### just use some values for the parameters... they will be overwritten
     params['fittedParams']= {'shift':60, 'mean':1.2, 'sigma':1.1, 'number synapses':20}
@@ -24,6 +24,7 @@ params['tau_ampa'] = 10
 params['tau_gaba'] = 10
 params['E_ampa']   = 0
 params['E_gaba']   = -90
+params['tau_syn']  = 10
 ## Izhikevich RS neuron
 params['RS_C']      = 100
 params['RS_k']      = 0.7

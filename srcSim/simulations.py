@@ -1,20 +1,73 @@
 from ANNarchy import *
 import pylab as plt
 from model import params, rng
-from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster
+from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
 
+
+
+###################################################   MONITORS   ####################################################
 monDict={'pop;inputPop':['r'],
-         'pop;corEL1':['v', 'spike'],
-         'pop;corIL1':['v', 'spike']}
-
+         'pop;corEL1':['syn', 'spike'],
+         'pop;corIL1':['syn', 'spike']}
 mon={}
-for key, val in monDict.items():
-    compartmentType, compartment = key.split(';')
-    if compartmentType=='pop':
-        mon[compartment] = Monitor(get_population(compartment),val)
-        
+mon=addMonitors(monDict,mon)
 
+
+
+#################################################   BOLDMONITORS   ##################################################
+monB={}
+### STANDARD BOLDMONITOR WITHOUT ANY OPTIONALS --> JUST DEFINE POPULATIONS AND INPUT VARIABLE
+monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corEL1')],
+                        input_variables="syn")
+                            
+### ALSO RECORD INPUT (r) OF BOLDNEURON
+monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corEL1')],
+                        input_variables="syn",
+                        recorded_variables=["BOLD", "r"])
+                        
+### SCALE THE POPULATION SIGNALS EQUALLY
+monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corEL1')],
+                        scale_factor=[1,1],
+                        input_variables="syn",
+                        recorded_variables=["BOLD", "r"])
+                        
+### NORMALIZE THE POPULATION SIGNALS WITH BASELINE OVER 1000 ms
+monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corEL1')],
+                        normalize_input=[1000,1000],
+                        input_variables="syn",
+                        recorded_variables=["BOLD", "r"])
+                        
+### USE SELF DEFINED POPULATION SIGNALS (input_variables + BOLD_MODEL (output_variables + bold_model)
+monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corEL1')],
+                        normalize_input=[1000,1000],
+                        input_variables=["var_f","var_r"],
+                        output_variables=["I_f","I_r"],
+                        bold_model=BoldNeuron_new,
+                        recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD_Balloon","BOLD_Davis"])
+
+
+
+####################################################   COMPILE   ####################################################
 compile()
+
+### INITIALIZE PARAMETERS OF OWN BOLD MODEL
+kCBF = 1/2.46
+kCMRO2 = 2*kCBF
+net.get(m_bold_Neuron_NEW).k_CBF=kCBF
+net.get(m_bold_Neuron_NEW).k_CMRO2=kCMRO2
+net.get(m_bold_Neuron_NEW).c_CBF=0.6*np.sqrt(4*kCBF)
+net.get(m_bold_Neuron_NEW).c_CMRO2=np.sqrt(4*kCMRO2)
+
+
+
+##################################################   SIMULATION   ###################################################
+
+### RAMP_UP FOR MODEL
+simulate(1000)
+
+### START MONITORS
+startMonitors(monDict,mon)### TODO
+
 
 simulate(20000)
 
