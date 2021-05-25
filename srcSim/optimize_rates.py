@@ -5,6 +5,13 @@ import sys
 from model import params, rng
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors, generateInputs
 
+"""
+    this input current optimization + number of synapses optimization needs:
+        params['optimizeRates'] = True
+        params['increasingInputs'] = False
+        params['input']='Current'
+"""
+
 # hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK
 from hyperopt.pyll import scope

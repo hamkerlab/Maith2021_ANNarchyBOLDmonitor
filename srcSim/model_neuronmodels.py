@@ -109,3 +109,70 @@ InputNeuron = Neuron(
     description = "Rate of neuron increases linearly, proportionally to offset.",
     extra_values=params
 )
+
+InputPoissonNeuron = Neuron(
+    parameters="""
+        tau         = 'input_tau' : population
+        offsetVal   = 0
+        increaseVal = 0
+    """,
+    equations = """
+        p = Uniform(0.0, 1.0) * 1000.0 / dt
+        rate=increaseVal*t/tau+offsetVal
+    """,
+    spike = """
+        p <= rate
+        """,
+    reset = """
+       p=0.0
+    """,
+    name = "InputPoissonNeuron",
+    description = "Spiking rate of Poisson neuron increases linearly, proportionally to offset.",
+    extra_values=params
+)
+
+#new standard model
+# damped harmonic oscillators, k->timeconstant, c->damping
+# CBF --> try k from Friston
+# CMRO2 --> faster --> k=k_CBF*2 (therefore scaling of I_CMRO2 --> if same input CMRO2 and CBF same steady-state)
+# critical c --> c**2-4k = 0 --> c=sqrt(4k)
+# CBF underdamped for undershoot --> c = 0.4*sqrt(4k)
+# CMRO2 critical --> c = sqrt(4k)
+# after CBF and CMRO2 standard balloon model with revised coefficients, parameter values = Friston et al. (2000)
+newBoldNeuron = Neuron(
+parameters = """
+    c_CBF       = 1
+    k_CBF       = 1
+    c_CMRO2     = 1
+    k_CMRO2     = 1
+    ea          = 1.0
+    E_0         = 0.34
+    tau_0       = 0.98
+    alpha       = 0.33
+    V_0         = 0.02
+    v_0         = 40.3
+    TE          = 40/1000.
+    epsilon     = 1
+    r_0         = 25
+""",
+equations = """
+    I_CBF           = sum(I_f)                                                     : init=0
+    I_CMRO2         = sum(I_r) * (k_CMRO2 / k_CBF)                                 : init=0
+    1000*dsCBF/dt   = ea * I_CBF - c_CBF * sCBF - k_CBF * (CBF - 1)                : init=0
+    1000*dCBF/dt    = sCBF                                                         : init=1, max=2, min=0
+    1000*dsCMRO2/dt = ea * I_CMRO2 - c_CMRO2 * sCMRO2 - k_CMRO2 * (CMRO2 - 1)      : init=0
+    1000*dCMRO2/dt  = sCMRO2                                                       : init=1, max=2, min=0
+
+    1000*dq/dt      = 1 / tau_0 * (CMRO2 - (q / v) * f_out)                        : init=1
+    1000*dv/dt      = 1 / tau_0 * (CBF - f_out)                                    : init=1
+    f_out           = v**(1 / alpha)                                               : init=1
+
+    k_1             = 4.3 * v_0 * E_0 * TE
+    k_2             = epsilon * r_0 * E_0 * TE
+    k_3             = 1 - epsilon
+    BOLD_Balloon    = V_0 * (k_1 * (1 - q) + k_2 * (1 - (q / v)) + k_3 * (1 - v))  : init=0
+    r=0
+""",
+    name = "-",
+    description = "-"
+)

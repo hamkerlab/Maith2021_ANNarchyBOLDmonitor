@@ -46,7 +46,9 @@ def plot_input_and_raster(recordings, name):
     t,n = raster_plot(recordings['corIL1;spike'])
     plt.plot(t,n,'k.',markersize=0.2)
     plt.savefig('../results/'+name)
-            
+
+
+   
 def generateInputs(a,b,c,d,rng):
     """
         draws values from logNorm distribution
@@ -60,7 +62,6 @@ def generateInputs(a,b,c,d,rng):
         returns: [values array, threshold]
     """
 
-
     ### get maxVal from CDF
     maxVal = lognorm.ppf(0.99,s=c,loc=0,scale=np.exp(b))
     
@@ -73,7 +74,9 @@ def generateInputs(a,b,c,d,rng):
         keptVals=keptVals+list(vals[vals<=maxVal])
 
     return {'values':np.array(keptVals)+a, 'threshold':maxVal+a}
-    
+
+
+
 def addMonitors(monDict,mon):
     """
         generate monitors defined by monDict
@@ -88,16 +91,27 @@ def addMonitors(monDict,mon):
         if compartmentType=='pop':
             mon[compartment] = Monitor(get_population(compartment),val, start=False)
     return mon
-    
+
+
+
 def startMonitors(monDict,mon):
     """
         start monitores defined by monDict
     """
+    started={}
     for key, val in monDict.items():
         compartmentType, compartment = key.split(';')
-        if compartmentType=='pop':
+        if compartmentType=='pop' or compartmentType=='BOLD':
+            started[compartment]=False
+
+    for key, val in monDict.items():
+        compartmentType, compartment = key.split(';')
+        if (compartmentType=='pop' or compartmentType=='BOLD') and started[compartment]==False:
             mon[compartment].start()
-    
+            started[compartment]=True
+
+
+
 def getMonitors(monDict,mon,recordings):
     """
         get recorded values from monitors
@@ -109,5 +123,7 @@ def getMonitors(monDict,mon,recordings):
         for val_val in val:
             recordings[compartment+';'+val_val] = mon[compartment].get(val_val)
     return recordings
-    
-    
+
+
+
+
