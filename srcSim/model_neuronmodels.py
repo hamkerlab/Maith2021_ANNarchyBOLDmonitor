@@ -170,7 +170,7 @@ equations = """
     k_1             = 4.3 * v_0 * E_0 * TE
     k_2             = epsilon * r_0 * E_0 * TE
     k_3             = 1 - epsilon
-    BOLD_Balloon    = V_0 * (k_1 * (1 - q) + k_2 * (1 - (q / v)) + k_3 * (1 - v))  : init=0
+    BOLD            = V_0 * (k_1 * (1 - q) + k_2 * (1 - (q / v)) + k_3 * (1 - v))  : init=0
     r=0
 """,
     name = "-",

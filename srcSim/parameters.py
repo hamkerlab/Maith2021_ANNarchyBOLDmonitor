@@ -55,7 +55,7 @@ params['corE_popsize'] = 200
 if params['input']=='Current':
     params['inputPop_init_offsetVal'] = generateInputs(params['fittedParams']['shift'],params['fittedParams']['mean'],params['fittedParams']['sigma'],params['corE_popsize'],rng)['values']
 elif params['input']=='Poisson':
-    params['inputPop_init_offsetVal'] = 30
+    params['inputPop_init_offsetVal'] = 500
 if params['increasingInputs']:
     params['inputPop_init_increaseVal'] = params['inputPop_init_offsetVal']
 else:

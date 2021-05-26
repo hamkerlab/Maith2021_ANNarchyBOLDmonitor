@@ -61,10 +61,14 @@ simParams   = np.load('../dataRaw/simulations_initialTestofBOLD_simParams.npy', 
 times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['simDur']+simParams['dt'],simParams['dt'])
 
 
-plt.figure(figsize=(16,9),dpi=500)
 
-## Input & population activities
-ax=plt.subplot(3,6,1)
+### CREATE FIGURE
+rows=8
+plt.figure(figsize=(3*rows,9),dpi=500)
+
+## ROW 1: Input & population activities
+row=1
+ax=plt.subplot(3,rows,rows*0+row)
 plt.title('inputPop')
 if simParams['input']=='Current':
     for neuron in range(recordings['inputPop;r'].shape[1]):
@@ -80,7 +84,7 @@ elif simParams['input']=='Poisson':
     ax2=ax.twinx()
     ax2.plot(times,get_pop_rate(recordings['inputPop;spike'],simParams,simParams['simDur'],t_smooth_ms=-1))
     
-ax=plt.subplot(3,6,7)
+ax=plt.subplot(3,rows,rows*1+row)
 plt.title('corE')
 # raster plot
 t,n = raster_plot(recordings['corEL1;spike'])
@@ -92,7 +96,7 @@ plt.xlim(times[0],times[-1])
 ax2=ax.twinx()
 ax2.plot(times,get_pop_rate(recordings['corEL1;spike'],simParams,simParams['simDur'],t_smooth_ms=-1))
     
-ax=plt.subplot(3,6,13)
+ax=plt.subplot(3,rows,rows*2+row)
 plt.title('corI')
 # raster plot
 t,n = raster_plot(recordings['corIL1;spike'])
@@ -104,89 +108,142 @@ plt.xlim(times[0],times[-1])
 ax2=ax.twinx()
 ax2.plot(times,get_pop_rate(recordings['corIL1;spike'],simParams,simParams['simDur'],t_smooth_ms=-1))
 
-## BOLD 1
-plt.subplot(3,6,2)
+## ROW 2: BOLD 1
+row=2
+plt.subplot(3,rows,rows*0+row)
 plt.title('Standard BOLD')
 plt.plot(times,recordingsB['1;BOLD'])
 plt.ylim(0,0.025)
 plt.xlim(times[0],times[-1])
 
-## BOLD 2
-plt.subplot(3,6,3)
+## ROW 3: BOLD 2
+row=3
+plt.subplot(3,rows,rows*0+row)
 plt.title('BOLD with input r')
 plt.plot(times,recordingsB['2;BOLD'])
 plt.ylim(0,0.025)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,9)
+plt.subplot(3,rows,rows*1+row)
 plt.title('r')
 plt.plot(times,recordingsB['2;r'])
 plt.ylim(0,0.6)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,15)
-plt.title('theoretical population norm')
+plt.subplot(3,rows,rows*2+row)
+plt.title('theoretical population z-transform')
 rawInput = recordingsB['2;r']
-baseline = np.mean(rawInput[:int(1000/simParams['dt'])])
+baseline = np.mean(rawInput[:int(2000/simParams['dt'])])
+scaling  = np.std(rawInput[:int(2000/simParams['dt'])])*10
 print(baseline)
-normalizedInput = np.tanh((rawInput-baseline)/baseline)
+normalizedInput = (rawInput-baseline)/scaling
 plt.plot(times,normalizedInput)
 plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 
-## BOLD 3
-plt.subplot(3,6,4)
+## ROW 4: BOLD 3
+row=4
+plt.subplot(3,rows,rows*0+row)
 plt.title('Scaled population signals')
 plt.plot(times,recordingsB['3;BOLD'])
 plt.ylim(0,0.025)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,10)
+plt.subplot(3,rows,rows*1+row)
 plt.title('r')
 plt.plot(times,recordingsB['3;r'])
 plt.ylim(0,0.6)
 plt.xlim(times[0],times[-1])
 
-## BOLD 4
-plt.subplot(3,6,5)
-plt.title('Baseline over 1000 ms')
+## ROW 5: BOLD 4
+row=5
+plt.subplot(3,rows,rows*0+row)
+plt.title('Baseline over 2000 ms')
 plt.plot(times,recordingsB['4;BOLD'])
 plt.ylim(0,0.025)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,11)
+plt.subplot(3,rows,rows*1+row)
 plt.title('CBF')
 plt.plot(times,recordingsB['4;f_in'])
-plt.ylim(1.0,1.8)
+plt.ylim(0.5,1.8)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,17)
+plt.subplot(3,rows,rows*2+row)
 plt.title('r')
 plt.plot(times,recordingsB['4;r'])
 plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 
-## BOLD 5
-["I_CBF","I_CMRO2","CBF","CMRO2","BOLD_Balloon","BOLD_Davis"]
-plt.subplot(3,6,6)
+## ROW 6: BOLD 5
+row=6
+plt.subplot(3,rows,rows*0+row)
 plt.title('Self-defined model')
-plt.plot(times,recordingsB['5;BOLD_Balloon'])
-plt.ylim(0,0.025)
+plt.plot(times,recordingsB['5;BOLD'])
+#plt.ylim(0,0.025)
 plt.xlim(times[0],times[-1])
 
-plt.subplot(3,6,12)
+plt.subplot(3,rows,rows*1+row)
 plt.title('CBF & CMRO2')
 plt.plot(times,recordingsB['5;CBF'],label='CBF')
 plt.plot(times,recordingsB['5;CMRO2'],label='CMRO2')
-plt.ylim(1.0,1.8)
+#plt.ylim(0.5,1.8)
 plt.xlim(times[0],times[-1])
 plt.legend()
 
-plt.subplot(3,6,18)
+plt.subplot(3,rows,rows*2+row)
 plt.title('I_CBF & I_CMRO2')
 plt.plot(times,recordingsB['5;I_CBF'],label='I_CBF')
 plt.plot(times,recordingsB['5;I_CMRO2'],label='I_CMRO2')
-plt.ylim(-1.05,1.05)
+#plt.ylim(-1.05,1.05)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+## ROW 7: BOLD 6
+row=7
+plt.subplot(3,rows,rows*0+row)
+plt.title('Self-defined model only corE')
+plt.plot(times,recordingsB['6;BOLD'])
+#plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('CBF & CMRO2')
+plt.plot(times,recordingsB['6;CBF'],label='CBF')
+plt.plot(times,recordingsB['6;CMRO2'],label='CMRO2')
+#plt.ylim(0.5,1.8)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+plt.subplot(3,rows,rows*2+row)
+plt.title('I_CBF & I_CMRO2')
+plt.plot(times,recordingsB['6;I_CBF'],label='I_CBF')
+plt.plot(times,recordingsB['6;I_CMRO2'],label='I_CMRO2')
+#plt.ylim(-1.05,1.05)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+## ROW 8: BOLD 7
+row=8
+plt.subplot(3,rows,rows*0+row)
+plt.title('Self-defined model only corI')
+plt.plot(times,recordingsB['7;BOLD'])
+#plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('CBF & CMRO2')
+plt.plot(times,recordingsB['7;CBF'],label='CBF')
+plt.plot(times,recordingsB['7;CMRO2'],label='CMRO2')
+#plt.ylim(0.5,1.8)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+plt.subplot(3,rows,rows*2+row)
+plt.title('I_CBF & I_CMRO2')
+plt.plot(times,recordingsB['7;I_CBF'],label='I_CBF')
+plt.plot(times,recordingsB['7;I_CMRO2'],label='I_CMRO2')
+#plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 plt.legend()
 

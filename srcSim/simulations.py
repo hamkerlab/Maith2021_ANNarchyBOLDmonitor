@@ -11,7 +11,7 @@ def initialTestofBOLD():
     simParams['dt']=params['dt']
     simParams['input']=params['input']
     simParams['rampUp']=1000#ms
-    simParams['simDur']=2000#ms
+    simParams['simDur']=10000#ms
     
 
 
@@ -46,26 +46,44 @@ def initialTestofBOLD():
                             input_variables="syn",
                             recorded_variables=["BOLD", "r"])
                             
-    ### NORMALIZE THE POPULATION SIGNALS WITH BASELINE OVER 1000 ms TODO: I think normalize over population would be best, because individual neurons often are too variable (e.g. silent)
+    ### NORMALIZE THE POPULATION SIGNALS WITH BASELINE OVER 2000 ms
     monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
-                            normalize_input=[1000,1000],
+                            normalize_input=[2000,2000],
                             input_variables="syn",
                             recorded_variables=["BOLD", "r", "f_in"])
                             
     ### USE SELF DEFINED POPULATION SIGNALS (input_variables + BOLD_MODEL (output_variables + bold_model)
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
-                            normalize_input=[1000,1000],
+                            normalize_input=[2000,2000],
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD_Balloon"])
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+    
+    ### SELF-DEFINED ONLY corE WITHOUT NORMALIZATION
+    monB['6'] = BoldMonitor(populations=get_population('corEL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=newBoldNeuron,
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+    
+    ### SELF-DEFINED ONLY corI WITHOUT NORMALIZATION
+    monB['7'] = BoldMonitor(populations=get_population('corIL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=newBoldNeuron,
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
     monDictB={'BOLD;1':['BOLD'],
               'BOLD;2':['BOLD', 'r'],
               'BOLD;3':['BOLD', 'r'],
               'BOLD;4':['BOLD', 'r', 'f_in'],
-              'BOLD;5':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD_Balloon"]}
+              'BOLD;5':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;6':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;7':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"]}
 
 
 
