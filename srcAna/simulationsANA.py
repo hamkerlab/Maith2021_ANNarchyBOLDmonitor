@@ -63,7 +63,7 @@ times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParam
 
 
 ### CREATE FIGURE
-rows=10
+rows=12
 plt.figure(figsize=(3*rows,9),dpi=500)
 
 ## ROW 1: Input & population activities
@@ -294,6 +294,34 @@ plt.plot(times,recordingsB['9;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recor
 #plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 plt.legend()
+
+## ROW 11: BOLD 10
+row=11
+plt.subplot(3,rows,rows*0+row)
+plt.title('Standard only corE')
+plt.plot(times,recordingsB['10;BOLD'])
+plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('r')
+plt.plot(times,recordingsB['10;r'])
+plt.ylim(0,0.6)
+plt.xlim(times[0],times[-1])
+
+## ROW 12: BOLD 11
+row=12
+plt.subplot(3,rows,rows*0+row)
+plt.title('Standard only corE')
+plt.plot(times,recordingsB['11;BOLD'])
+plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('r')
+plt.plot(times,recordingsB['11;r'])
+plt.ylim(0,0.6)
+plt.xlim(times[0],times[-1])
 
 plt.savefig('simulationsANA_test.png')
 

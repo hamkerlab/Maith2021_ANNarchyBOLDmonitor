@@ -93,6 +93,18 @@ def initialTestofBOLD():
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
                             recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                                
+    ### Standard only corE
+    monB['10'] = BoldMonitor(populations=get_population('corEL1'),
+                            scale_factor=1,
+                            input_variables="syn",
+                            recorded_variables=["BOLD", "r"])
+                                
+    ### Standard only corI
+    monB['11'] = BoldMonitor(populations=get_population('corIL1'),
+                            scale_factor=1,
+                            input_variables="syn",
+                            recorded_variables=["BOLD", "r"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
     monDictB={'BOLD;1':['BOLD'],
@@ -103,7 +115,9 @@ def initialTestofBOLD():
               'BOLD;6':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
               'BOLD;7':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
               'BOLD;8':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;9':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"]}
+              'BOLD;9':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;10':['BOLD', 'r'],
+              'BOLD;11':['BOLD', 'r']}
 
 
 
