@@ -63,7 +63,7 @@ times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParam
 
 
 ### CREATE FIGURE
-rows=8
+rows=10
 plt.figure(figsize=(3*rows,9),dpi=500)
 
 ## ROW 1: Input & population activities
@@ -193,8 +193,8 @@ plt.legend()
 
 plt.subplot(3,rows,rows*2+row)
 plt.title('I_CBF & I_CMRO2')
-plt.plot(times,recordingsB['5;I_CBF'],label='I_CBF')
-plt.plot(times,recordingsB['5;I_CMRO2'],label='I_CMRO2')
+plt.plot(times,recordingsB['5;I_CBF'],label='I_CBF '+str(round(np.mean(recordingsB['5;I_CBF']),2)))
+plt.plot(times,recordingsB['5;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recordingsB['5;I_CMRO2']),2)))
 #plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 plt.legend()
@@ -217,8 +217,8 @@ plt.legend()
 
 plt.subplot(3,rows,rows*2+row)
 plt.title('I_CBF & I_CMRO2')
-plt.plot(times,recordingsB['6;I_CBF'],label='I_CBF')
-plt.plot(times,recordingsB['6;I_CMRO2'],label='I_CMRO2')
+plt.plot(times,recordingsB['6;I_CBF'],label='I_CBF '+str(round(np.mean(recordingsB['6;I_CBF']),2)))
+plt.plot(times,recordingsB['6;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recordingsB['6;I_CMRO2']),2)))
 #plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 plt.legend()
@@ -241,8 +241,56 @@ plt.legend()
 
 plt.subplot(3,rows,rows*2+row)
 plt.title('I_CBF & I_CMRO2')
-plt.plot(times,recordingsB['7;I_CBF'],label='I_CBF')
-plt.plot(times,recordingsB['7;I_CMRO2'],label='I_CMRO2')
+plt.plot(times,recordingsB['7;I_CBF'],label='I_CBF '+str(round(np.mean(recordingsB['7;I_CBF']),2)))
+plt.plot(times,recordingsB['7;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recordingsB['7;I_CMRO2']),2)))
+#plt.ylim(-1.05,1.05)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+## ROW 9: BOLD 8
+row=9
+plt.subplot(3,rows,rows*0+row)
+plt.title('Self-defined model only corI')
+plt.plot(times,recordingsB['8;BOLD'])
+#plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('CBF & CMRO2')
+plt.plot(times,recordingsB['8;CBF'],label='CBF')
+plt.plot(times,recordingsB['8;CMRO2'],label='CMRO2')
+#plt.ylim(0.5,1.8)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+plt.subplot(3,rows,rows*2+row)
+plt.title('I_CBF & I_CMRO2')
+plt.plot(times,recordingsB['8;I_CBF'],label='I_CBF '+str(round(np.mean(recordingsB['8;I_CBF']),2)))
+plt.plot(times,recordingsB['8;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recordingsB['8;I_CMRO2']),2)))
+#plt.ylim(-1.05,1.05)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+## ROW 10: BOLD 9
+row=10
+plt.subplot(3,rows,rows*0+row)
+plt.title('Self-defined model only corI')
+plt.plot(times,recordingsB['9;BOLD'])
+#plt.ylim(0,0.025)
+plt.xlim(times[0],times[-1])
+
+plt.subplot(3,rows,rows*1+row)
+plt.title('CBF & CMRO2')
+plt.plot(times,recordingsB['9;CBF'],label='CBF')
+plt.plot(times,recordingsB['9;CMRO2'],label='CMRO2')
+#plt.ylim(0.5,1.8)
+plt.xlim(times[0],times[-1])
+plt.legend()
+
+plt.subplot(3,rows,rows*2+row)
+plt.title('I_CBF & I_CMRO2')
+plt.plot(times,recordingsB['9;I_CBF'],label='I_CBF '+str(round(np.mean(recordingsB['9;I_CBF']),2)))
+plt.plot(times,recordingsB['9;I_CMRO2'],label='I_CMRO2 '+str(round(np.mean(recordingsB['9;I_CMRO2']),2)))
 #plt.ylim(-1.05,1.05)
 plt.xlim(times[0],times[-1])
 plt.legend()
