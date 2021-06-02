@@ -2,20 +2,18 @@ from ANNarchy import *
 import pylab as plt
 from scipy import stats
 import sys
-from model import params, rng
+from model import params, rng, add_scaled_projections
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors, generateInputs
 
 """
-    this input current optimization + number of synapses optimization needs:
-        params['optimizeRates'] = 'v1'
+    this weight scaling optimization needs:
+        params['optimizeRates'] = 'v2'
         params['increasingInputs'] = False
-        params['input']='Current'
 """
-if (params['optimizeRates']=='v1' and params['increasingInputs']==False and params['input']=='Current') == False:
-    print('other parameters needed for optimize rates v1')
+if (params['optimizeRates']=='v2' and params['increasingInputs']==False) == False:
+    print('other parameters needed for optimize rates v2')
     print("params['optimizeRates'] =",params['optimizeRates'],"--> v1 ?")
     print("params['increasingInputs'] =",params['increasingInputs'],"--> False ?")
-    print("params['input'] =",params['input'],"--> Current ?")
     quit()
 
 # hyperopt
@@ -26,6 +24,33 @@ from hyperopt.pyll import scope
 from multiprocessing import Process
 import multiprocessing
 
+def generateWeights(name, rng, scale=1.0):
+    """
+        function generates new scaled weights for one projection of model v2
+    """
+    weights = np.array(get_projection(name).w)
+    newWeights = params['weightDist'](rng,scale).get_values(int(weights.shape[0]*weights.shape[1]))
+    newWeights = np.reshape(newWeights, weights.shape).tolist()
+    
+    return newWeights
+    
+
+def scaleProjections(S_INP, S_EI, S_IE, S_II, rng):
+    """
+        generates new scaled weights for the projections of model v2 after compilation
+    """
+    get_projection('inputPop_corEL1').w = generateWeights('inputPop_corEL1', rng, scale=S_INP)
+    get_projection('inputPop_corIL1').w = generateWeights('inputPop_corIL1', rng, scale=S_INP)
+    get_projection('corEL1_corIL1').w   = generateWeights('corEL1_corIL1', rng, scale=S_EI)
+    get_projection('corIL1_corEL1').w   = generateWeights('corIL1_corEL1', rng, scale=S_IE)
+    get_projection('corIL1_corIL1').w   = generateWeights('corIL1_corIL1', rng, scale=S_II)
+
+
+
+### add the projections, scaling factors are adjusted during fitting below
+add_scaled_projections(params['fittedParams']['S_INP'], params['fittedParams']['S_EI'], params['fittedParams']['S_IE'], params['fittedParams']['S_II'], rng)
+
+
 
 ### standard model compilation
 simID=int(sys.argv[1])
@@ -33,39 +58,23 @@ mode=str(sys.argv[2])
 compile('annarchy'+str(simID))
 
 
-def set_number_of_synapses(weights, number):
-    """
-        weights: list (for each post neuron) of lists (list of weights to all pre neurons)
-        
-        For each postneuron (idx 0 in weights) sets random weights to zero, "number" weights are kept. Therefore, each neuron only has "number" effective inputs.
-    """
-    for idx, w in enumerate(weights):
-        ### select "number" random indices in weight vector
-        keep_weights_idx=rng.choice(np.arange(0,len(weights[idx]),1).astype(int),np.amin([len(weights[idx]),number]),replace=False)
-        mask=np.zeros(len(weights[idx]))
-        mask[keep_weights_idx]=1
-        ### multiply weight vector with zero, except the "number" values
-        weights[idx]=list(np.array(weights[idx])*mask.astype(int))
-
-    return weights
 
 ### DEFINE SIMULATOR
-def simulator(fitparams, m_list=[0,0]):
+def simulator(fitparams, rng, m_list=[0,0]):
     """
         fitparams: list
-            fitparams[0]: shift of logNormal distribution for the input current values of CorE
-            fitparams[1]: mean of logNormal distribution for the input current values of CorE
-            fitparams[2]: sigma of logNormal distribution for the input current values of CorE
-            fitparams[3]: general number of input synapses of all neurons
+            fitparams[0]: S_INP for weight scaling
+            fitparams[1]: S_EI for weight scaling
+            fitparams[2]: S_IE for weight scaling
+            fitparams[3]: S_II for weight scaling
             
         m_list: variable to store results, from multiprocessing
     """
     ### should plots be generated?
-    plotting=True
+    plotting=False
 
     ### get params
-    init_offsetVal = generateInputs(fitparams[0],fitparams[1],fitparams[2],params['corE_popsize'],rng)['values']
-    number_of_synapses = int(fitparams[3])
+    S_INP, S_EI, S_IE, S_II = fitparams
 
     ### reset model to compilation state
     reset()
@@ -78,13 +87,11 @@ def simulator(fitparams, m_list=[0,0]):
     mon = addMonitors(monDict,mon)
     
 
-    ### Set input strenght
-    get_population('inputPop').offsetVal=init_offsetVal
+    ### Set input strenght, if function is called multiple times --> different inputs (but same distribution)
+    get_population('inputPop').offsetVal = generateInputs(0,1.2,1.1,params['corE_popsize'],rng)['values']
 
-    ### Set number of synapses in projections = set all weights except number of synapses to zero (non-zero weights=random)
-    get_projection('corEL1_corIL1').w=set_number_of_synapses(get_projection('corEL1_corIL1').w, number_of_synapses)
-    get_projection('corIL1_corEL1').w=set_number_of_synapses(get_projection('corIL1_corEL1').w, number_of_synapses)
-    get_projection('corIL1_corIL1').w=set_number_of_synapses(get_projection('corIL1_corIL1').w, number_of_synapses)
+    ### Set scaled weights of the projections
+    scaleProjections(S_INP, S_EI, S_IE, S_II, rng)
 
     ### simulate
     startMonitors(monDict,mon)
@@ -148,7 +155,7 @@ def simulator(fitparams, m_list=[0,0]):
 
 def run_simulator(fitparams):
     """
-        runs the function simulator with the multiprocessing manager (if function is called sequentially, this stores memory, otherwise same as calling sumulator directly)
+        runs the function simulator with the multiprocessing manager (if function is called sequentially, this stores memory, otherwise same as calling simulator directly)
         
         fitparams: list, for description see function simulator
         return: returns dictionary needed for optimization with hyperopt
@@ -156,14 +163,17 @@ def run_simulator(fitparams):
     manager = multiprocessing.Manager()
     m_list = manager.dict()
 
+    num_rep = 10
+    loss = np.zeros(num_rep)
+    for i in range(num_rep):
+        rng = np.random.default_rng()
+        proc = Process(target=simulator,args=(fitparams,rng,m_list))
+        proc.start()
+        proc.join()
 
-    proc = Process(target=simulator,args=(fitparams,m_list))
-
-    proc.start()
-
-    proc.join()
-
-    loss=m_list[0]
+        loss[i]=m_list[0]
+        
+    loss = np.mean(loss)
     obtained=m_list[1]
     
     return {
@@ -172,8 +182,7 @@ def run_simulator(fitparams):
         'obtained': obtained
         }
         
-### TODO implement run_simulator_parallel function, which averages the loss over mnultiple runs (with different seeds), to mean over the random implementation (input curretn, which synapses are kept)
-        
+       
 def testFit(fitparamsDict):
     """
         fitparamsDict: dictionary with parameters, format = as hyperopt returns fit results
@@ -182,7 +191,7 @@ def testFit(fitparamsDict):
         
         Returns the loss computed in simulator function.
     """
-    return run_simulator([fitparamsDict['shift'],fitparamsDict['mean'],fitparamsDict['sigma'],fitparamsDict['number synapses']])['loss']
+    return run_simulator([fitparamsDict['I_INP'],fitparamsDict['I_EI'],fitparamsDict['I_IE'],fitparamsDict['I_II']])['loss']
 
 
 if mode=='optimize':
@@ -190,24 +199,25 @@ if mode=='optimize':
     best = fmin(
         fn=run_simulator,
         space=[
-            hp.uniform('shift', 40, 150),
-            hp.uniform('mean', 0, 3),
-            hp.uniform('sigma', 0.1, 2),
-            scope.int(hp.quniform('number synapses', 5, 49, q=1))
+            hp.uniform('I_INP', 0.5, 20),
+            hp.uniform('I_EI', 0.5, 20),
+            hp.uniform('I_IE', 0.5, 20),
+            hp.uniform('I_II', 0.5, 20)
         ],
         algo=tpe.suggest,
         max_evals=1000)
     best['loss'] = testFit(best)
     
     ### SAVE OPTIMIZED PARAMS AND LOSS
-    np.save('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy',best)
+    np.save('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy',best)
     
 if mode=='test':
     ### LOAD FITTED PARAMETERS
-    fit=np.load('../dataRaw/optimize_rates_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
+    fit=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
     """results=0
     for i in range(10):
         result+=testFit(fit)['loss']#TODO would run 10 times exactly the same, should use different rng seeds"""
+    #fit = {'I_INP':1, 'I_EI':1, 'I_IE':1, 'I_II':1,}
     ### PRINT LOSS
     result=testFit(fit)
     print(simID, fit, result)

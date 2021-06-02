@@ -123,6 +123,18 @@ def getMonitors(monDict,mon,recordings):
         for val_val in val:
             recordings[compartment+';'+val_val] = mon[compartment].get(val_val)
     return recordings
+    
+    
+    
+def scaledANNarchyLogNormal(rng, scale=1.0):
+    """
+        function which returns ANNarchy LogNormal object
+        
+        lognormal distribution obtained, so that EPSPs have the EPSPs distribution from Song et al. (2005)... tested in get_weightDist.py
+        
+        optional scale this distribution
+    """
+    return LogNormal(mu=-1.5+np.log(scale), sigma=0.93, max=generateInputs(0,-1.5+np.log(scale),0.93,1,rng)['threshold'])
 
 
 

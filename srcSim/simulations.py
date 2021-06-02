@@ -1,7 +1,7 @@
 from ANNarchy import *
 from ANNarchy.extensions.bold import *
 import pylab as plt
-from model import params, rng, newBoldNeuron
+from model import params, rng, newBoldNeuron, add_scaled_projections
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
 
 
@@ -12,7 +12,15 @@ def initialTestofBOLD():
     simParams['input']=params['input']
     simParams['rampUp']=1000#ms
     simParams['simDur']=30000#ms
-    
+
+
+
+    #########################################   ADD PROJECTIONS IF MODEL v2   ###########################################
+    if 'v2' in params['optimizeRates']:
+        """
+            add the scaled projections of model v2
+        """
+        add_scaled_projections(params['fittedParams']['S_INP'], params['fittedParams']['S_EI'], params['fittedParams']['S_IE'], params['fittedParams']['S_II'], rng)
 
 
     ###################################################   MONITORS   ####################################################

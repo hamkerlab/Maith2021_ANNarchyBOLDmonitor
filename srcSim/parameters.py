@@ -1,6 +1,6 @@
 from ANNarchy import LogNormal, Uniform
 import numpy as np
-from extras import generateInputs
+from extras import generateInputs, scaledANNarchyLogNormal
 
 rng = np.random.default_rng()
 
@@ -8,16 +8,30 @@ params={}
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
-params['optimizeRates'] = False
+params['optimizeRates'] = ['v1','v1post','v2','v2post'][2]# v1 = optimized input current distribution and number-pre-fix, v2 = optimize weight scalings, post = not fitting but use fitted values
 params['increasingInputs'] = False
-params['input']='Current'
-if params['optimizeRates']:
-    ## just use some values for the parameters... they will be overwritten
+
+if 'v1' in params['optimizeRates']:
+    ## define if Poisson or Current input, current input is fitted in v1
+    params['input']= ['Current','Poisson'][0]
+elif 'v2' in params['optimizeRates']:
+    ## in v2 input is Poisson population
+    params['input'] = 'Poisson'
+
+if params['optimizeRates']=='v1':
+    ## just use some values for the parameters... they will be overwritten during optimization
     params['fittedParams']= {'shift':60, 'mean':1.2, 'sigma':1.1, 'number synapses':20}
-else:
+elif params['optimizeRates']=='v1post':
     ## load fitted parameters
     params['useFit'] = 13
     params['fittedParams'] = np.load('../dataRaw/optimize_rates_obtainedParams'+str(params['useFit'])+'.npy', allow_pickle=True).item()
+elif params['optimizeRates']=='v2':
+    ## just use some values for the parameters... they will be overwritten during optimization
+    params['fittedParams']= {'S_INP':1, 'S_EI':1, 'S_IE':1, 'S_II':1}
+elif params['optimizeRates']=='v2post':
+    ## v2 --> weight scalings were fitted
+    params['useFit'] = 1
+    params['fittedParams'] = np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(params['useFit'])+'.npy', allow_pickle=True).item()
 
 ### Neuron models
 ## conductance based synapses
@@ -52,16 +66,29 @@ params['input_tau'] = 10000#how many miliseconds to increase input current by th
 
 ### Populations
 params['corE_popsize'] = 200
-if params['input']=='Current':
+if params['input']=='Current' and ('v1' in params['optimizeRates']):
+    # input current distribution
     params['inputPop_init_offsetVal'] = generateInputs(params['fittedParams']['shift'],params['fittedParams']['mean'],params['fittedParams']['sigma'],params['corE_popsize'],rng)['values']
-elif params['input']=='Poisson':
+elif params['input']=='Poisson' and ('v1' in params['optimizeRates']):
+    # firing rates of all poisson neurons, in v1 all poisson input neurons have the same rate
     params['inputPop_init_offsetVal'] = 500
+elif 'v2' in params['optimizeRates']:
+    # v2 --> input = poisson with lognormal distributed firing rates, distribution with mean 1.2 and sigma 1.1, similar to firing rate distributions shown in Buzsaki & Mizuseki 2014
+    params['inputPop_init_offsetVal'] = generateInputs(0,1.2,1.1,params['corE_popsize'],rng)['values']
+
 if params['increasingInputs']:
+    # the input does linearly increase with time t
     params['inputPop_init_increaseVal'] = params['inputPop_init_offsetVal']
 else:
     params['inputPop_init_increaseVal'] = 0
 
 ### Projections
-params['weightDist'] = LogNormal(mu=-1.5, sigma=0.93, max=generateInputs(0,-1.5,0.93,1,rng)['threshold'])
-params['numInputs']  = params['fittedParams']['number synapses']
+params['weightDist'] = scaledANNarchyLogNormal
+
+if 'v1' in params['optimizeRates']:
+    params['numInputs']  = params['fittedParams']['number synapses']
+elif 'v2' in params['optimizeRates']:
+    # if model v2 --> use may possible num-pre-fix for all projections
+    params['numInputs']  = params['corE_popsize']//4 - 1
+
 
