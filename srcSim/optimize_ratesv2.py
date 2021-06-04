@@ -126,7 +126,7 @@ def simulator(fitparams, rng, m_list=[0,0]):
 
     if plotting:
         ### plot1
-        plot_input_and_raster(recordings, 'optimize_rates_input_and_raster_'+str(simID)+'.png')
+        plot_input_and_raster(recordings, 'optimize_ratesv2_input_and_raster_'+str(simID)+'.png')
         
         ### plot2
         for pop in ['corEL1', 'corIL1']:
@@ -148,7 +148,7 @@ def simulator(fitparams, rng, m_list=[0,0]):
         plt.plot(x, lognormalPDF(x, mu=1.2, sigma=1.1), label='targetDist (Buzsaki & Mizuseki, 2014)')
         plt.plot(x, lognormalPDF(x, mu=obtained[1][0], sigma=obtained[1][1], shift=obtained[1][2]), ls='dashed', label='simulatedDist')
         plt.legend()
-        plt.savefig('../results/optimize_rates_distributions_'+str(simID)+'.svg')
+        plt.savefig('../results/optimize_ratesv2_distributions_'+str(simID)+'.svg')
 
     m_list[0]=loss
     m_list[1]=obtained
@@ -163,23 +163,26 @@ def run_simulator(fitparams):
     manager = multiprocessing.Manager()
     m_list = manager.dict()
 
-    num_rep = 10
-    loss = np.zeros(num_rep)
+    num_rep = 20
+    lossAr = np.zeros(num_rep)
     for i in range(num_rep):
+        print('rep',i)
         rng = np.random.default_rng()
         proc = Process(target=simulator,args=(fitparams,rng,m_list))
         proc.start()
         proc.join()
 
-        loss[i]=m_list[0]
+        lossAr[i]=m_list[0]
         
-    loss = np.mean(loss)
+    std  = np.std(lossAr)
+    loss = np.mean(lossAr)
     obtained=m_list[1]
     
     return {
         'loss': loss,
         'status': STATUS_OK,
-        'obtained': obtained
+        'obtained': obtained,
+        'std': std
         }
         
        
@@ -191,7 +194,7 @@ def testFit(fitparamsDict):
         
         Returns the loss computed in simulator function.
     """
-    return run_simulator([fitparamsDict['I_INP'],fitparamsDict['I_EI'],fitparamsDict['I_IE'],fitparamsDict['I_II']])['loss']
+    return run_simulator([fitparamsDict['I_INP'],fitparamsDict['I_EI'],fitparamsDict['I_IE'],fitparamsDict['I_II']])
 
 
 if mode=='optimize':
@@ -206,18 +209,26 @@ if mode=='optimize':
         ],
         algo=tpe.suggest,
         max_evals=1000)
-    best['loss'] = testFit(best)
+    fit=testFit(best)
+    best['loss'] = fit['loss']
+    best['std'] = fit['std']
     
     ### SAVE OPTIMIZED PARAMS AND LOSS
     np.save('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy',best)
     
 if mode=='test':
     ### LOAD FITTED PARAMETERS
-    fit=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
-    """results=0
-    for i in range(10):
-        result+=testFit(fit)['loss']#TODO would run 10 times exactly the same, should use different rng seeds"""
+    best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
     #fit = {'I_INP':1, 'I_EI':1, 'I_IE':1, 'I_II':1,}
     ### PRINT LOSS
-    result=testFit(fit)
-    print(simID, fit, result)
+    result=testFit(best)
+    print(simID, best, result)
+    
+    updateBest=True
+    if updateBest:
+        best['loss']=result['loss']
+        best['std']=result['std']
+        
+        ### SAVE OPTIMIZED PARAMS AND LOSS
+        np.save('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy',best)
+        
