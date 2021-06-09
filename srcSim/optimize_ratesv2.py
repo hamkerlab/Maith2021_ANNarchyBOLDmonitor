@@ -224,11 +224,24 @@ if mode=='test':
     result=testFit(best)
     print(simID, best, result)
     
-    updateBest=True
+    updateBest=False
     if updateBest:
         best['loss']=result['loss']
         best['std']=result['std']
         
         ### SAVE OPTIMIZED PARAMS AND LOSS
         np.save('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy',best)
+
+if mode=='best':
+    for i in range(10):
+        simID=i+1
+        ### LOAD FITTED PARAMETERS
+        best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
+        print(simID, best)
+
+
+
+
+
+
         

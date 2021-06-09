@@ -1,7 +1,7 @@
 from ANNarchy import *
 from ANNarchy.extensions.bold import *
 import pylab as plt
-from model import params, rng, newBoldNeuron, add_scaled_projections
+from model import params, rng, newBoldNeuron, add_scaled_projections, BoldNeuron_r
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
 
 
@@ -189,6 +189,7 @@ def BOLDfromDifferentSources():
     simParams['rampUp']=1000#ms
     simParams['simDur']=30000#ms
     simParams['BOLDbaseline']=2000#ms
+    simParams['firingRateWindow']=2000#ms
 
 
 
@@ -230,10 +231,12 @@ def BOLDfromDifferentSources():
     monB['1Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="syn",
+                                bold_model=BoldNeuron_r,
                                 recorded_variables=["r"])
     monB['1Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
                                 input_variables="syn",
+                                bold_model=BoldNeuron_r,
                                 recorded_variables=["r"])
                             
     ### single input: excitatory syn input
@@ -244,20 +247,79 @@ def BOLDfromDifferentSources():
     monB['2Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="g_ampa",
+                                bold_model=BoldNeuron_r,
                                 recorded_variables=["r"])
     monB['2Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
                                 input_variables="g_ampa",
+                                bold_model=BoldNeuron_r,
                                 recorded_variables=["r"])
     
-    ### TODO single input: firing rate
-    
-    ### TODO two inputs: Buxton (2012, 2014, 2021), excitatory --> CMRO2&CBF, inhibitory --> CBF, use post-synaptic currents as driving signals (they likely cause metabolism)
-    
-    ### TODO two inputs: Buxton + Howarth et al. (2021), firing of interneurons --> CMRO2
-    
+    ### single input: firing rate
+    ## to record firing rate from spiking populations it has to be calculated
+    get_population('corEL1').compute_firing_rate(window=simParams['firingRateWindow'])
+    get_population('corIL1').compute_firing_rate(window=simParams['firingRateWindow'])
 
-    ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
+    monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
+                            normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
+                            input_variables="r",
+                            recorded_variables=["BOLD", "r"])
+    monB['3Eraw'] = BoldMonitor(populations=get_population('corEL1'),
+                                scale_factor=1,
+                                input_variables="r",
+                                bold_model=BoldNeuron_r,
+                                recorded_variables=["r"])
+    monB['3Iraw'] = BoldMonitor(populations=get_population('corIL1'),
+                                scale_factor=1,
+                                input_variables="r",
+                                bold_model=BoldNeuron_r,
+                                recorded_variables=["r"])
+    
+    ### two inputs: Buxton (2012, 2014, 2021), excitatory --> CMRO2&CBF, inhibitory --> CBF, use post-synaptic currents as driving signals (they likely cause metabolism)
+    monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
+                            normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
+                            input_variables=["var_f","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=newBoldNeuron,
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+    monB['4Eraw'] = BoldMonitor(populations=get_population('corEL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
+    monB['4Iraw'] = BoldMonitor(populations=get_population('corIL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
+    
+    ### TODO two inputs: Buxton + Howarth et al. (2021), firing of interneurons additionally drive CMRO2
+    ## activate that in some interneurons also firing rate drives CMRO2
+    rToCMRO2=get_population('corIL1').rToCMRO2
+    rToCMRO2[:len(rToCMRO2)//2] = 1 # TODO find a value where current and firing rate have same order of magnitude
+    
+    monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
+                            normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
+                            input_variables=["var_f","var_r2"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=newBoldNeuron,
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+    monB['5Eraw'] = BoldMonitor(populations=get_population('corEL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r2"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
+    monB['5Iraw'] = BoldMonitor(populations=get_population('corIL1'),
+                            scale_factor=1,
+                            input_variables=["var_f","var_r2"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
+
+    ### TODO GENERATE monDict for BOLDMonitors, to easier start and get the monitors
     monDictB={'BOLD;1':['BOLD'],
               'BOLD;2':['BOLD', 'r'],
               'BOLD;3':['BOLD', 'r'],

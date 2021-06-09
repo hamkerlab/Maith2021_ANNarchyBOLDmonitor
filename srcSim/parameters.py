@@ -8,7 +8,7 @@ params={}
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
-params['optimizeRates'] = ['v1','v1post','v2','v2post'][2]# v1 = optimized input current distribution and number-pre-fix, v2 = optimize weight scalings, post = not fitting but use fitted values
+params['optimizeRates'] = ['v1','v1post','v2','v2post'][3]# v1 = optimized input current distribution and number-pre-fix, v2 = optimize weight scalings, post = not fitting but use fitted values
 params['increasingInputs'] = False
 
 if 'v1' in params['optimizeRates']:
@@ -30,8 +30,9 @@ elif params['optimizeRates']=='v2':
     params['fittedParams']= {'S_INP':1, 'S_EI':1, 'S_IE':1, 'S_II':1}
 elif params['optimizeRates']=='v2post':
     ## v2 --> weight scalings were fitted
-    params['useFit'] = 1
+    params['useFit'] = 4
     params['fittedParams'] = np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(params['useFit'])+'.npy', allow_pickle=True).item()
+
 
 ### Neuron models
 ## conductance based synapses
@@ -50,7 +51,7 @@ params['RS_b']      = -2
 params['RS_c']      = -50
 params['RS_d']      = 100
 params['RS_v_peak'] = 35
-## Izhikevich RS neuron
+## Izhikevich FS neuron
 params['FS_C']      = 20
 params['FS_k']      = 1
 params['FS_v_r']    = -55
@@ -61,8 +62,10 @@ params['FS_b']      = 0.025
 params['FS_c']      = -45
 params['FS_d']      = 0
 params['FS_v_peak'] = 25
+params['FS_rToCMRO2']  = 0
 ## Input neurons
 params['input_tau'] = 10000#how many miliseconds to increase input current by the value offset
+
 
 ### Populations
 params['corE_popsize'] = 200
@@ -82,13 +85,14 @@ if params['increasingInputs']:
 else:
     params['inputPop_init_increaseVal'] = 0
 
+
 ### Projections
 params['weightDist'] = scaledANNarchyLogNormal
 
 if 'v1' in params['optimizeRates']:
     params['numInputs']  = params['fittedParams']['number synapses']
 elif 'v2' in params['optimizeRates']:
-    # if model v2 --> use may possible num-pre-fix for all projections
+    # if model v2 --> use max possible num-pre-fix for all projections
     params['numInputs']  = params['corE_popsize']//4 - 1
 
 

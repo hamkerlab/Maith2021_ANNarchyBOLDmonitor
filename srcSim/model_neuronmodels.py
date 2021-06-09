@@ -71,6 +71,7 @@ Izhikevich2007FS = Neuron(
         E_gaba   = 'E_gaba'    : population
         
         tau_syn  = 'tau_syn'   : population
+        rToCMRO2 = 'FS_rToCMRO2'
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
@@ -83,8 +84,9 @@ Izhikevich2007FS = Neuron(
         du/dt      = a*(U_v - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f = abs(I_ampa) + 1.5*abs(I_gaba)
-        var_r = abs(I_ampa) 
+        var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
+        var_r  = abs(I_ampa)
+        var_r2 = abs(I_ampa) + r * rToCMRO2
     """,
     spike = "v >= v_peak",
     reset = """
@@ -175,4 +177,16 @@ equations = """
 """,
     name = "-",
     description = "-"
+)
+
+
+### BOLD neuron only for single input recording
+BoldNeuron_r = Neuron(
+parameters = """
+""",
+equations = """
+    r             = sum(exc)                                                    : init=0
+    I_CBF         = sum(I_f)                                                    : init=0
+    I_CMRO2       = sum(I_r)                                                    : init=0
+"""
 )
