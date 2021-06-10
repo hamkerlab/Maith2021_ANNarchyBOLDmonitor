@@ -40,8 +40,9 @@ Izhikevich2007RS = Neuron(
         du/dt      = a*(b*(v - v_r) - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f = abs(I_ampa) + 1.5*abs(I_gaba)
-        var_r = abs(I_ampa) 
+        var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
+        var_r  = abs(I_ampa) 
+        var_r2 = abs(I_ampa) 
     """,
     spike = "v >= v_peak",
     reset = """

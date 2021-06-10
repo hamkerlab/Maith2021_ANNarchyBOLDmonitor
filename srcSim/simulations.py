@@ -177,10 +177,9 @@ def initialTestofBOLD():
     np.save('../dataRaw/simulations_initialTestofBOLD_recordings.npy',recordings)
     np.save('../dataRaw/simulations_initialTestofBOLD_recordingsB.npy',recordingsB)
     np.save('../dataRaw/simulations_initialTestofBOLD_simParams.npy',simParams)
-    
-    
-    
-### TODO: implement function which computes BOLD signal from different sources
+
+
+
 def BOLDfromDifferentSources():
     #########################################   IMPORTANT SIMULATION PARAMS   ###########################################
     simParams={}
@@ -209,7 +208,7 @@ def BOLDfromDifferentSources():
     elif params['input']=='Poisson':
         monDict={'pop;inputPop':['spike'],
                  'pop;corEL1':['syn', 'spike'],
-                 'pop;corIL1':['syn', 'spike']}
+                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_r2']}
     mon={}
     mon=addMonitors(monDict,mon)
 
@@ -219,9 +218,9 @@ def BOLDfromDifferentSources():
     """
         Generate BOLD monitors with different input signals.
         Additionally implement BOLD monitors for the individual populations, without normalization to verify the raw input signals.
-        Attention! For the raw input signals, the BOLD calculation may "explode" --> Adjust BOLD monitor parameters, so that no computation takes place.
+        Attention! For the raw input signals, the BOLD calculation may "explode" --> Use BOLD neuron (BoldNeuron_r) which doesn't perform calculations
     """
-    norm
+
     monB={}
     ### BOLD monitor which uses single input: all syn input
     monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
@@ -295,8 +294,8 @@ def BOLDfromDifferentSources():
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     
-    ### TODO two inputs: Buxton + Howarth et al. (2021), firing of interneurons additionally drive CMRO2
-    ## activate that in some interneurons also firing rate drives CMRO2
+    ### two inputs: Buxton + Howarth et al. (2021), firing of interneurons additionally drive CMRO2
+    ## activate that in half of the interneurons additionally firing rate drives CMRO2
     rToCMRO2=get_population('corIL1').rToCMRO2
     rToCMRO2[:len(rToCMRO2)//2] = 1 # TODO find a value where current and firing rate have same order of magnitude
     
@@ -319,18 +318,22 @@ def BOLDfromDifferentSources():
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
 
-    ### TODO GENERATE monDict for BOLDMonitors, to easier start and get the monitors
-    monDictB={'BOLD;1':['BOLD'],
-              'BOLD;2':['BOLD', 'r'],
-              'BOLD;3':['BOLD', 'r'],
-              'BOLD;4':['BOLD', 'r', 'f_in'],
-              'BOLD;5':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;6':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;7':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;8':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;9':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;10':['BOLD', 'r'],
-              'BOLD;11':['BOLD', 'r']}
+    ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
+    monDictB={'BOLD;1':     ['BOLD', 'r'],
+              'BOLD;1Eraw': ['r'],
+              'BOLD;1Iraw': ['r'],
+              'BOLD;2':     ['BOLD', 'r'],
+              'BOLD;2Eraw': ['r'],
+              'BOLD;2Iraw': ['r'],
+              'BOLD;3':     ['BOLD', 'r'],
+              'BOLD;3Eraw': ['r'],
+              'BOLD;3Iraw': ['r'],
+              'BOLD;4':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;4Eraw': ["I_CBF","I_CMRO2"],
+              'BOLD;4Iraw': ["I_CBF","I_CMRO2"],
+              'BOLD;5':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;5Eraw': ["I_CBF","I_CMRO2"],
+              'BOLD;5Iraw': ["I_CBF","I_CMRO2"]}
 
 
 
@@ -340,10 +343,11 @@ def BOLDfromDifferentSources():
     ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
     kCBF = 1/2.46
     kCMRO2 = 2*kCBF
-    monB['5'].k_CBF=kCBF
-    monB['5'].k_CMRO2=kCMRO2
-    monB['5'].c_CBF=0.6*np.sqrt(4*kCBF)
-    monB['5'].c_CMRO2=np.sqrt(4*kCMRO2)
+    for monID in ['4','5']:
+        monB[monID].k_CBF=kCBF
+        monB[monID].k_CMRO2=kCMRO2
+        monB[monID].c_CBF=0.6*np.sqrt(4*kCBF)
+        monB[monID].c_CMRO2=np.sqrt(4*kCMRO2)
     
 
 
@@ -379,12 +383,13 @@ def BOLDfromDifferentSources():
     
 
     ### SAVE DATA
-    np.save('../dataRaw/simulations_initialTestofBOLD_recordings.npy',recordings)
-    np.save('../dataRaw/simulations_initialTestofBOLD_recordingsB.npy',recordingsB)
-    np.save('../dataRaw/simulations_initialTestofBOLD_simParams.npy',simParams)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordings.npy',recordings)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB.npy',recordingsB)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_simParams.npy',simParams)
 
 
 if __name__=='__main__':
 
-    initialTestofBOLD()
+    #initialTestofBOLD()
+    BOLDfromDifferentSources()
 

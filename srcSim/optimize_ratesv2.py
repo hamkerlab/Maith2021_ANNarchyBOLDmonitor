@@ -194,7 +194,7 @@ def testFit(fitparamsDict):
         
         Returns the loss computed in simulator function.
     """
-    return run_simulator([fitparamsDict['I_INP'],fitparamsDict['I_EI'],fitparamsDict['I_IE'],fitparamsDict['I_II']])
+    return run_simulator([fitparamsDict['S_INP'],fitparamsDict['S_EI'],fitparamsDict['S_IE'],fitparamsDict['S_II']])
 
 
 if mode=='optimize':
@@ -202,10 +202,10 @@ if mode=='optimize':
     best = fmin(
         fn=run_simulator,
         space=[
-            hp.uniform('I_INP', 0.5, 20),
-            hp.uniform('I_EI', 0.5, 20),
-            hp.uniform('I_IE', 0.5, 20),
-            hp.uniform('I_II', 0.5, 20)
+            hp.uniform('S_INP', 0.5, 20),
+            hp.uniform('S_EI', 0.5, 20),
+            hp.uniform('S_IE', 0.5, 20),
+            hp.uniform('S_II', 0.5, 20)
         ],
         algo=tpe.suggest,
         max_evals=1000)
@@ -219,7 +219,7 @@ if mode=='optimize':
 if mode=='test':
     ### LOAD FITTED PARAMETERS
     best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
-    #fit = {'I_INP':1, 'I_EI':1, 'I_IE':1, 'I_II':1,}
+    #fit = {'S_INP':1, 'S_EI':1, 'S_IE':1, 'S_II':1,}
     ### PRINT LOSS
     result=testFit(best)
     print(simID, best, result)
@@ -238,6 +238,38 @@ if mode=='best':
         ### LOAD FITTED PARAMETERS
         best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
         print(simID, best)
+        
+if mode=="rename":
+    """
+        rename old saved dictionarys with wrong key names
+    """
+    for i in range(10):
+        simID=i+1
+        ### LOAD FITTED PARAMETERS
+        best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
+        print(simID, best)
+
+        ### Save eys and vals
+        keys = np.array(list(best.keys()))
+        vals = np.array(list(best.values())).astype(float)
+        
+        ### What should be renamed
+        rename = np.array([['I_INP', 'I_EI', 'I_IE', 'I_II'],
+                           ['S_INP', 'S_EI', 'S_IE', 'S_II']])
+
+        ### Rename keys
+        for idx in range(rename.shape[1]):
+            keys[keys==rename[0,idx]]=rename[1,idx]
+           
+        ### Generate new dict with new keys 
+        best = {}
+        for key, val in zip(keys, vals):
+            best[key] = val
+            
+        ### Save / overwrite dict
+        np.save('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy',best)
+
+        print(simID, best, '\n')
 
 
 
