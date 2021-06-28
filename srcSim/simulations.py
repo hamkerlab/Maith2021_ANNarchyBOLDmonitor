@@ -185,7 +185,7 @@ def BOLDfromDifferentSources():
     simParams={}
     for key in ['dt', 'input', 'corE_popsize']:
         simParams[key]=params[key]
-    simParams['rampUp']=1000#ms
+    simParams['rampUp']=3000#ms
     simParams['simDur']=30000#ms
     simParams['BOLDbaseline']=2000#ms
     simParams['firingRateWindow']=2000#ms

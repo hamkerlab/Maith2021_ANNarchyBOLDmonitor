@@ -53,7 +53,7 @@ times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParam
 
 
 
-### CREATE FIGURE with standard monitors
+### CREATE FIGURE WITH STANDARD MONITORS
 plt.figure(figsize=(16,9),dpi=500)
 
 ## FIRST COLUMN
@@ -94,4 +94,127 @@ ax = plt.subplot(2,5,10)
 plotAverageOfNeuronVariables(title='corI var_r', variables=[recordings['corIL1;var_r'],recordings['corIL1;var_ra']], labels=['var_r','var_ra'], times=times, ax=ax)
 
 plt.tight_layout()
-plt.savefig('BOLDfromDifferentSources_ANA.png')
+plt.savefig('BOLDfromDifferentSources_ANA_standard.png')
+
+
+### NEXT FIGURE WITH BOLD MONITORS
+plt.figure(figsize=(16,9),dpi=500)
+
+## FIRST COLUMN
+## BOLD1
+plt.subplot(5,5,1)
+plt.title('E raw input')
+plt.plot(times, recordingsB['1Eraw;r'][:,0])
+plt.subplot(5,5,6)
+plt.title('I raw input')
+plt.plot(times, recordingsB['1Iraw;r'][:,0])
+plt.subplot(5,5,11)
+plt.title('actual input'+str(round(np.mean(recordingsB['1;r'][:,0]),3)))
+plt.plot(times, recordingsB['1;r'][:,0])
+plt.subplot(5,5,16)
+plt.subplot(5,5,21)
+plt.title('BOLD')
+plt.plot(times, recordingsB['1;BOLD'][:,0])
+
+## SECOND COLUMN
+plt.subplot(5,5,2)
+plt.title('E raw input')
+plt.plot(times, recordingsB['2Eraw;r'][:,0])
+plt.subplot(5,5,7)
+plt.title('I raw input')
+plt.plot(times, recordingsB['2Iraw;r'][:,0])
+plt.subplot(5,5,12)
+plt.title('actual input'+str(round(np.mean(recordingsB['2;r'][:,0]),3)))
+plt.plot(times, recordingsB['2;r'][:,0])
+plt.subplot(5,5,17)
+plt.subplot(5,5,22)
+plt.title('BOLD')
+plt.plot(times, recordingsB['2;BOLD'][:,0])
+
+## THIRD COLUMN
+plt.subplot(5,5,3)
+plt.title('E raw input')
+plt.plot(times, recordingsB['3Eraw;r'][:,0])
+plt.subplot(5,5,8)
+plt.title('I raw input')
+plt.plot(times, recordingsB['3Iraw;r'][:,0])
+plt.subplot(5,5,13)
+plt.title('actual input'+str(round(np.mean(recordingsB['3;r'][:,0]),3)))
+plt.plot(times, recordingsB['3;r'][:,0])
+plt.subplot(5,5,18)
+plt.subplot(5,5,23)
+plt.title('BOLD')
+plt.plot(times, recordingsB['3;BOLD'][:,0])
+
+## FOURTH COLUMN
+plt.subplot(5,5,4)
+plt.title('E raw input')
+plt.plot(times, recordingsB['4Eraw;I_CBF'][:,0], label='I_f', alpha=0.5)
+plt.plot(times, recordingsB['4Eraw;I_CMRO2'][:,0], label='I_r', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,9)
+plt.title('I raw input')
+plt.plot(times, recordingsB['4Iraw;I_CBF'][:,0], label='I_f', alpha=0.5)
+plt.plot(times, recordingsB['4Iraw;I_CMRO2'][:,0], label='I_r', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,14)
+plt.title('actual input')
+plt.plot(times, recordingsB['4;I_CBF'][:,0], label='I_CBF', alpha=0.5)
+plt.plot(times, recordingsB['4;I_CMRO2'][:,0], label='I_CMRO2', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,19)
+plt.title('flow and oxygen')
+plt.plot(times, recordingsB['4;CBF'][:,0], label='CBF', alpha=0.5)
+plt.plot(times, recordingsB['4;CMRO2'][:,0], label='CMRO2', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,24)
+plt.title('BOLD')
+plt.plot(times, recordingsB['4;BOLD'][:,0])
+
+## FITH COLUMN
+plt.subplot(5,5,5)
+plt.title('E raw input')
+plt.plot(times, recordingsB['5Eraw;I_CBF'][:,0], label='I_f', alpha=0.5)
+plt.plot(times, recordingsB['5Eraw;I_CMRO2'][:,0], label='I_r', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,10)
+plt.title('I raw input')
+plt.plot(times, recordingsB['5Iraw;I_CBF'][:,0], label='I_f', alpha=0.5)
+plt.plot(times, recordingsB['5Iraw;I_CMRO2'][:,0], label='I_r', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,15)
+plt.title('actual input')
+plt.plot(times, recordingsB['5;I_CBF'][:,0], label='I_CBF', alpha=0.5)
+plt.plot(times, recordingsB['5;I_CMRO2'][:,0], label='I_CMRO2', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,20)
+plt.title('flow and oxygen')
+plt.plot(times, recordingsB['5;CBF'][:,0], label='CBF', alpha=0.5)
+plt.plot(times, recordingsB['5;CMRO2'][:,0], label='CMRO2', alpha=0.5)
+plt.legend()
+plt.subplot(5,5,25)
+plt.title('BOLD')
+plt.plot(times, recordingsB['5;BOLD'][:,0])
+
+plt.tight_layout()
+plt.savefig('BOLDfromDifferentSources_ANA_BOLD.png')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
