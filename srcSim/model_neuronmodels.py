@@ -72,7 +72,6 @@ Izhikevich2007FS = Neuron(
         E_gaba   = 'E_gaba'    : population
         
         tau_syn  = 'tau_syn'   : population
-        rToCMRO2 = 'FS_rToCMRO2'
     """,
     equations="""
         dg_ampa/dt = -g_ampa/tau_ampa : init = 0
@@ -87,7 +86,7 @@ Izhikevich2007FS = Neuron(
         tau_syn*dsyn/dt = -syn
         var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
         var_r  = abs(I_ampa)
-        var_ra = abs(I_ampa) + r * rToCMRO2
+        var_ra = r
     """,
     spike = "v >= v_peak",
     reset = """

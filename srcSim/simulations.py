@@ -207,8 +207,8 @@ def BOLDfromDifferentSources():
                  'pop;corIL1':['syn', 'spike']}
     elif params['input']=='Poisson':
         monDict={'pop;inputPop':['spike'],
-                 'pop;corEL1':['syn', 'spike'],
-                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_ra', 'r', 'rToCMRO2']}
+                 'pop;corEL1':['syn', 'spike', 'var_r', 'var_ra', 'r'],
+                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_ra', 'r']}
     mon={}
     mon=addMonitors(monDict,mon)
 
@@ -294,12 +294,7 @@ def BOLDfromDifferentSources():
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     
-    ### two inputs: Buxton + Howarth et al. (2021), firing of interneurons additionally drive CMRO2
-    ## activate that in half of the interneurons additionally firing rate drives CMRO2
-    rToCMRO2=get_population('corIL1').rToCMRO2
-    rToCMRO2[:len(rToCMRO2)//2] = 100 # TODO find a value where current and firing rate have same order of magnitude, var_r2 should not be simply higher active, it should be: firing rate rather than syn input drives CMRO2
-    get_population('corIL1').rToCMRO2 = rToCMRO2
-    
+    ### two inputs: Buxton + Howarth et al. (2021), in interneurons firing rate drives CMRO2
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables=["var_f","var_ra"],

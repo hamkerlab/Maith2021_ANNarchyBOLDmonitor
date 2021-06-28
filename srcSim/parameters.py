@@ -62,7 +62,6 @@ params['FS_b']      = 0.025
 params['FS_c']      = -45
 params['FS_d']      = 0
 params['FS_v_peak'] = 25
-params['FS_rToCMRO2']  = 0
 ## Input neurons
 params['input_tau'] = 10000#how many miliseconds to increase input current by the value offset
 
