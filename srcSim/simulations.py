@@ -183,8 +183,8 @@ def initialTestofBOLD():
 def BOLDfromDifferentSources():
     #########################################   IMPORTANT SIMULATION PARAMS   ###########################################
     simParams={}
-    simParams['dt']=params['dt']
-    simParams['input']=params['input']
+    for key in ['dt', 'input', 'corE_popsize']:
+        simParams[key]=params[key]
     simParams['rampUp']=1000#ms
     simParams['simDur']=30000#ms
     simParams['BOLDbaseline']=2000#ms
@@ -208,7 +208,7 @@ def BOLDfromDifferentSources():
     elif params['input']=='Poisson':
         monDict={'pop;inputPop':['spike'],
                  'pop;corEL1':['syn', 'spike'],
-                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_r2']}
+                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_ra', 'r', 'rToCMRO2']}
     mon={}
     mon=addMonitors(monDict,mon)
 
@@ -297,23 +297,24 @@ def BOLDfromDifferentSources():
     ### two inputs: Buxton + Howarth et al. (2021), firing of interneurons additionally drive CMRO2
     ## activate that in half of the interneurons additionally firing rate drives CMRO2
     rToCMRO2=get_population('corIL1').rToCMRO2
-    rToCMRO2[:len(rToCMRO2)//2] = 1 # TODO find a value where current and firing rate have same order of magnitude
+    rToCMRO2[:len(rToCMRO2)//2] = 100 # TODO find a value where current and firing rate have same order of magnitude, var_r2 should not be simply higher active, it should be: firing rate rather than syn input drives CMRO2
+    get_population('corIL1').rToCMRO2 = rToCMRO2
     
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            input_variables=["var_f","var_r2"],
+                            input_variables=["var_f","var_ra"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
                             recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
     monB['5Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            input_variables=["var_f","var_r2"],
+                            input_variables=["var_f","var_ra"],
                             output_variables=["I_f","I_r"],
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     monB['5Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            input_variables=["var_f","var_r2"],
+                            input_variables=["var_f","var_ra"],
                             output_variables=["I_f","I_r"],
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])

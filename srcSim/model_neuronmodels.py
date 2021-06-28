@@ -42,7 +42,7 @@ Izhikevich2007RS = Neuron(
         tau_syn*dsyn/dt = -syn
         var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
         var_r  = abs(I_ampa) 
-        var_r2 = abs(I_ampa) 
+        var_ra = abs(I_ampa) 
     """,
     spike = "v >= v_peak",
     reset = """
@@ -87,7 +87,7 @@ Izhikevich2007FS = Neuron(
         tau_syn*dsyn/dt = -syn
         var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
         var_r  = abs(I_ampa)
-        var_r2 = abs(I_ampa) + r * rToCMRO2
+        var_ra = abs(I_ampa) + r * rToCMRO2
     """,
     spike = "v >= v_peak",
     reset = """
