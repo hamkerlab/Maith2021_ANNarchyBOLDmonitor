@@ -2,11 +2,12 @@ Python:
     3.7.4
 
 ANNarchy:
-    commit f3d9d8e8a43140640222fad00340b6df1af9a09e (HEAD -> develop, origin/develop)
+    commit ec835d5dac702a490233921b7ceaa4a0083c067e (HEAD -> develop, origin/develop)
     Author: Helge Dinkelbach <helge.dinkelbach@gmail.com>
-    Date:   Mon May 10 15:17:38 2021 +0200
+    Date:   Mon Jun 28 11:35:21 2021 +0200
 
-        BoldMonitor: added weightening of the input signals and allow a baseline normalization.
+        Bugfix introduced in commit d10a59d
+        
 
 Package                Version      Location                                            
 ---------------------- ------------ ----------------------------------------------------

@@ -1,6 +1,7 @@
 from ANNarchy import *
 from ANNarchy.extensions.bold import *
 import pylab as plt
+import sys
 from model import params, rng, newBoldNeuron, add_scaled_projections, BoldNeuron_r
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
 
@@ -11,7 +12,7 @@ def initialTestofBOLD():
     simParams['dt']=params['dt']
     simParams['input']=params['input']
     simParams['rampUp']=1000#ms
-    simParams['simDur']=30000#ms
+    simParams['sim_dur']=30000#ms
 
 
 
@@ -159,7 +160,7 @@ def initialTestofBOLD():
 
 
     ### ACTUAL SIMULATION
-    simulate(simParams['simDur'])
+    simulate(simParams['sim_dur'])
 
 
     ### GET MONITORS
@@ -180,16 +181,27 @@ def initialTestofBOLD():
 
 
 
-def BOLDfromDifferentSources():
+def BOLDfromDifferentSources(input_factor=1, stimulus=0):
     #########################################   IMPORTANT SIMULATION PARAMS   ###########################################
     simParams={}
     for key in ['dt', 'input', 'corE_popsize']:
         simParams[key]=params[key]
-    simParams['rampUp']=3000#ms
-    simParams['simDur']=30000#ms
+    simParams['rampUp']=2000#ms !!!ATTENTION!!! rampUp has to be >= firingRateWindow otherwise firing rate starts at a wrong value
+    simParams['stimulus']=stimulus
+    if stimulus==0:
+        ## long input
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [5000,20000,0]#ms
+    elif stimulus==1:
+        ## short input pulse
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [5000,100,19900]#ms
+    else:
+        print('second argument, stimulus, has to be 0 or 1')
+        quit()
+    simParams['sim_dur']=simParams['sim_dur1'] + simParams['sim_dur2'] + simParams['sim_dur3']
     simParams['BOLDbaseline']=2000#ms
-    simParams['firingRateWindow']=2000#ms
-
+    simParams['firingRateWindow']=10#ms
+    simParams['input_factor']=input_factor
+    save_string = str(simParams['input_factor']).replace('.','_')+'_'+str(simParams['stimulus']).replace('.','_')
 
 
     #########################################   ADD PROJECTIONS IF MODEL v2   ###########################################
@@ -226,7 +238,7 @@ def BOLDfromDifferentSources():
     monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
     monB['1Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="syn",
@@ -242,7 +254,7 @@ def BOLDfromDifferentSources():
     monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="g_ampa",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
     monB['2Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="g_ampa",
@@ -262,7 +274,7 @@ def BOLDfromDifferentSources():
     monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="r",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
     monB['3Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="r",
@@ -313,15 +325,35 @@ def BOLDfromDifferentSources():
                             output_variables=["I_f","I_r"],
                             bold_model=BoldNeuron_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
+    
+    ### two inputs: Buxton, but flow is quadratic
+    monB['6'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
+                            normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
+                            input_variables=["var_fa","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=newBoldNeuron,
+                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+    monB['6Eraw'] = BoldMonitor(populations=get_population('corEL1'),
+                            scale_factor=1,
+                            input_variables=["var_fa","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
+    monB['6Iraw'] = BoldMonitor(populations=get_population('corIL1'),
+                            scale_factor=1,
+                            input_variables=["var_fa","var_r"],
+                            output_variables=["I_f","I_r"],
+                            bold_model=BoldNeuron_r,
+                            recorded_variables=["I_CBF","I_CMRO2"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
-    monDictB={'BOLD;1':     ['BOLD', 'r'],
+    monDictB={'BOLD;1':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
               'BOLD;1Eraw': ['r'],
               'BOLD;1Iraw': ['r'],
-              'BOLD;2':     ['BOLD', 'r'],
+              'BOLD;2':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
               'BOLD;2Eraw': ['r'],
               'BOLD;2Iraw': ['r'],
-              'BOLD;3':     ['BOLD', 'r'],
+              'BOLD;3':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
               'BOLD;3Eraw': ['r'],
               'BOLD;3Iraw': ['r'],
               'BOLD;4':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
@@ -329,12 +361,15 @@ def BOLDfromDifferentSources():
               'BOLD;4Iraw': ["I_CBF","I_CMRO2"],
               'BOLD;5':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
               'BOLD;5Eraw': ["I_CBF","I_CMRO2"],
-              'BOLD;5Iraw': ["I_CBF","I_CMRO2"]}
+              'BOLD;5Iraw': ["I_CBF","I_CMRO2"],
+              'BOLD;6':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;6Eraw': ["I_CBF","I_CMRO2"],
+              'BOLD;6Iraw': ["I_CBF","I_CMRO2"]}
 
 
 
     ####################################################   COMPILE   ####################################################
-    compile()
+    compile('annarchy_'+save_string)
 
     ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
     kCBF = 1/2.46
@@ -364,7 +399,13 @@ def BOLDfromDifferentSources():
 
 
     ### ACTUAL SIMULATION
-    simulate(simParams['simDur'])
+    simulate(simParams['sim_dur1'])
+    ## increase input
+    get_population('inputPop').offsetVal = params['inputPop_init_offsetVal']*simParams['input_factor']
+    simulate(simParams['sim_dur2'])
+    ## reset input
+    get_population('inputPop').offsetVal = params['inputPop_init_offsetVal']
+    simulate(simParams['sim_dur3'])
 
 
     ### GET MONITORS
@@ -379,13 +420,20 @@ def BOLDfromDifferentSources():
     
 
     ### SAVE DATA
-    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordings.npy',recordings)
-    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB.npy',recordingsB)
-    np.save('../dataRaw/simulations_BOLDfromDifferentSources_simParams.npy',simParams)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordings_'+save_string+'.npy',recordings)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+save_string+'.npy',recordingsB)
+    np.save('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+save_string+'.npy',simParams)
 
 
 if __name__=='__main__':
 
-    #initialTestofBOLD()
-    BOLDfromDifferentSources()
+    if len(sys.argv)==3:
+        ## optional input_factor and stimulus given
+        BOLDfromDifferentSources(input_factor=float(sys.argv[1]), stimulus=int(sys.argv[2]))
+    elif len(sys.argv)==2:
+        ## optional input_factor given
+        BOLDfromDifferentSources(input_factor=float(sys.argv[1]))
+    else:
+        ## standard simulation arguments used
+        BOLDfromDifferentSources()
 
