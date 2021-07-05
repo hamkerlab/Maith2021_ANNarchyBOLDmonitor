@@ -47,13 +47,64 @@ def plotAverageOfNeuronVariables(title='', variables=[], labels=[], times=[], ax
     else:
         return 0
         
-def get_firing_rate_of_last_seconds(rate_arr, simParams):
+def get_population_average_of_last_10(population_arr, simParams):
     """
-        returns average firing rate of last 10 seconds, given an rate array of a population
+        returns average value of last 10 seconds, given an population array, first idx = time, second index = neuron ranks
     """
-    return np.mean(rate_arr[-int(10000/simParams['dt']):,:])
+    return np.mean(population_arr[-int(10000/simParams['dt']):,:])
     
+def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, recordingsB_rest):
+    """
+        plots one column of the with vs without normalization plot
+    """
+    ### FIRST ROW
+    plt.subplot(3,2,col+1)
+    plt.title(title)
+    plt.plot(times, recordingsB_pulse[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='k', label='pulse')
+    plt.plot(times, recordingsB_rest[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='grey', ls='dashed', label='resting')
+    plt.ylim(-0.3,1.05)
+    if col==0: plt.ylabel('I')
+    if col==1: plt.legend()
+    ### SECOND ROW
+    plt.subplot(3,2,col+3)
+    plt.plot(times, recordingsB_pulse[mon_name+';f_in'][:,0], color='k')
+    plt.plot(times, recordingsB_rest[mon_name+';f_in'][:,0], color='grey', ls='dashed')
+    plt.ylim(0.87,1.27)
+    if col==0: plt.ylabel('CBF')
+    ### THIRD ROW
+    plt.subplot(3,2,col+5)
+    plt.plot(times, recordingsB_pulse[mon_name+';BOLD'][:,0], color='k')
+    plt.plot(times, recordingsB_rest[mon_name+';BOLD'][:,0], color='grey', ls='dashed')
+    plt.ylim(-0.01, 0.01)
+    plt.xlabel('time / ms')
+    if col==0: plt.ylabel('BOLD')
+
+def pulses_visualization_plot_row(row, ylabel,recordingsB, times, simParams):
+    """
+        plots one row of the pulses visualization plot
+    """
+    ### LEFT COLUMN
+    plt.subplot(6,2,2*row+1)
+    plt.ylabel(ylabel)
+    plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
+    if row<3:
+        plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='k')
+        if row==0: plt.title('CBF / CMRO2')
+    else:
+        plt.plot(times, recordingsB[str(row+1)+';CBF'][:,0],label='CBF', color='k')
+        plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='grey', ls='dashed')
+        if row==3: plt.legend()
+        if row==5: plt.xlabel('time / ms')
+    plt.ylim(0.85,1.7)
+    ### RIGHT COLUMN
+    plt.subplot(6,2,2*row+2)
+    plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
+    plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
+    plt.ylim(-0.005,0.015)
+    if row==0: plt.title('BOLD')
+    if row==5: plt.xlabel('time / ms')
         
+
 
 def two_overview_plots(input_factor=1.0, stimulus=0):
     ### LOAD DATA
@@ -107,7 +158,7 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plotAverageOfNeuronVariables(title='corI var_r', variables=[recordings['corIL1;var_r'],recordings['corIL1;var_ra']], labels=['var_r','var_ra'], times=times, ax=ax, simParams=simParams)
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_standard.png')
+    plt.savefig('BOLDfromDifferentSources_ANA_overview_standard.png')
 
 
     ### NEXT FIGURE WITH BOLD MONITORS
@@ -256,16 +307,19 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plt.plot(times, recordingsB['6;BOLD'][:,0])
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_BOLD.png')
+    plt.savefig('BOLDfromDifferentSources_ANA_overview_BOLD.png')
     
+
     
 def different_input_strengths():
-    ### TODO: x-axis = input_factor, y-axis = mean firing E and I, mean CBF, CMRO2, BOLD, mean over last 10 seconds
+    """
+        x-axis = input_factor, y-axis = mean firing E and I, mean CBF, CMRO2, BOLD, I_CBF and I_CMRO2, mean over last 10 seconds
+    """
     
     input_factor_list=[1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
     stimulus=0
     
-    y_values = np.empty((len(input_factor_list),5))
+    y_values = np.empty((len(input_factor_list),7,6))
     y_values[:,:] = np.nan
     for input_factor_idx,input_factor in enumerate(input_factor_list):
         ### LOAD DATA
@@ -278,20 +332,203 @@ def different_input_strengths():
         
         
         ### MEAN FIRING RATE
-        y_values[input_factor_idx,0] = get_firing_rate_of_last_seconds(recordings['corEL1;r'],simParams)
-        y_values[input_factor_idx,1] = get_firing_rate_of_last_seconds(recordings['corIL1;r'],simParams)
-        
-        ### MEAN CBF OF ALL BOLD MONITORS TODO
-        #for bold_monitor in [1,2,3,4,5,6]:
-            
+        y_values[input_factor_idx,0,:] = get_population_average_of_last_10(recordings['corEL1;r'],simParams)
+        y_values[input_factor_idx,1,:] = get_population_average_of_last_10(recordings['corIL1;r'],simParams)
         
 
+        ### MEAN CBF OF ALL BOLD MONITORS
+        for bold_monitor in [1,2,3,4,5,6]:
+            ## f_in of first BOLD monitors and CBF of last monitors
+            try:
+                y_values[input_factor_idx,2,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';f_in'],simParams)
+            except:
+                y_values[input_factor_idx,2,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';CBF'],simParams)
+
+
+        ### MEAN CMRO2 OF LAST BOLD MONITORS
+        for bold_monitor in [4,5,6]:
+            y_values[input_factor_idx,3,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';CMRO2'],simParams)
+
+        
+        ### MEAN BOLD OF ALL BOLD MONITORS
+        for bold_monitor in [1,2,3,4,5,6]:
+            y_values[input_factor_idx,4,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';BOLD'],simParams)
+
+
+        ### MEAN I_CBF OF ALL BOLD MONITORS
+        for bold_monitor in [1,2,3,4,5,6]:
+            ## f_in of first BOLD monitors and CBF of last monitors
+            try:
+                y_values[input_factor_idx,5,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';r'],simParams)
+            except:
+                y_values[input_factor_idx,5,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';I_CBF'],simParams)
+
+
+        ### MEAN I_CMRO2 OF LAST BOLD MONITORS
+        for bold_monitor in [4,5,6]:
+            y_values[input_factor_idx,6,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';I_CMRO2'],simParams)
+
+
+    ### PLOT
+    num_rows=6
+    num_cols=3
+    plt.figure(figsize=(10,12), dpi=500)
+
+    for bold_monitor in [1,2,3,4,5,6]:
+        row=bold_monitor-1
+        if row==0:
+            ## FIRST ROW: FIRING RATES + BOLD MONITOR 1 + TITLES
+            # FIRING RATES
+            plt.subplot(num_rows,num_cols,row*num_cols+1)
+            plt.title('firing rates')
+            plt.plot(input_factor_list,y_values[:,0,row],color='k')
+            plt.plot(input_factor_list,y_values[:,1,row],color='k',ls='dashed')
+            plt.xlabel('input factor')
+            # CBF AND CMRO2
+            plt.subplot(num_rows,num_cols,row*num_cols+2)
+            plt.title('CBF and CMRO2')
+            plt.plot(input_factor_list,y_values[:,2,row],color='k')
+            # BOLD
+            plt.subplot(num_rows,num_cols,row*num_cols+3)
+            plt.title('BOLD')
+            plt.plot(input_factor_list,y_values[:,4,row],color='k')
+        elif row==(num_rows-1):
+            ## LAST ROW: LAST BOLD MONITOR + XLABELS
+            # CBF AND CMRO2
+            plt.subplot(num_rows,num_cols,row*num_cols+2)
+            plt.plot(input_factor_list,y_values[:,2,row],color='k')
+            plt.plot(input_factor_list,y_values[:,3,row],color='k',ls='dashed')
+            plt.xlabel('input factor')
+            # BOLD
+            plt.subplot(num_rows,num_cols,row*num_cols+3)
+            plt.plot(input_factor_list,y_values[:,4,row],color='k')
+            plt.xlabel('input factor')
+        else:
+            ## OTHER ROWS: OTHER BOLD MONITORS
+            # CBF AND CMRO2
+            plt.subplot(num_rows,num_cols,row*num_cols+2)
+            plt.plot(input_factor_list,y_values[:,2,row],color='k')
+            if bold_monitor in [4,5,6]:
+                plt.plot(input_factor_list,y_values[:,3,row],color='k',ls='dashed')
+            # BOLD
+            plt.subplot(num_rows,num_cols,row*num_cols+3)
+            plt.plot(input_factor_list,y_values[:,4,row],color='k')
+
+    plt.tight_layout()
+    plt.savefig('BOLDfromDifferentSources_ANA_different_input_strengths.png')
+
+
+
+def with_vs_without_normalization():
+    """
+        load data of one pulse simulation
+        demonstrate input+flow+BOLD for standard BOLD monitor with and without normalization
+        additionally show same data without a pulse stimulus
+    """
+    ### LOAD DATA
+    load_string_pulse = '5_0_1'
+    load_string_rest = '1_0_1'
+    recordingsB_pulse = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_pulse+'.npy', allow_pickle=True).item()
+    recordingsB_rest = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_rest+'.npy', allow_pickle=True).item()
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string_pulse+'.npy', allow_pickle=True).item()
+
+    times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
+
+    ### PLOT
+    plt.figure(figsize=(16,9),dpi=500)
+
+    ## WITHOUT NORMALIZATION
+    normalization_plot_column(title='without normalization', mon_name='1withoutNorm', col=0, times=times, recordingsB_pulse=recordingsB_pulse, recordingsB_rest=recordingsB_rest)
+    ## WITH NORMALIZATION
+    normalization_plot_column(title='with normalization', mon_name='1', col=1, times=times, recordingsB_pulse=recordingsB_pulse, recordingsB_rest=recordingsB_rest)
+    
+    plt.tight_layout()
+    plt.savefig('BOLDfromDifferentSources_ANA_with_vs_without_norm.png')
+
+
+
+def pulses_visualization():
+    """
+        load data of one pulse simulation
+        visualize CBF/CMRO2 and BOLD of the different BOLD monitors with different source signals
+    """
+
+    ### LOAD DATA
+    load_string = '5_0_1'
+    recordingsB = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'.npy', allow_pickle=True).item()
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
+
+    times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
+
+
+    ### PLOT
+    plt.figure(figsize=(10,12),dpi=500)
+
+    for row, label in enumerate(['A','B','C','D','E','F']):
+        pulses_visualization_plot_row(row, label, recordingsB, times, simParams)
+
+    plt.tight_layout()
+    plt.savefig('BOLDfromDifferentSources_ANA_pulses_visualization.png', dpi=500)
+
+
+
+def BOLD_correlations():
+    """
+        load data of one long resting simulation
+        load monitored BOLD signals of diffeent BOLD monitors
+        generate correlation matrix between these BOLD signals
+    """
+
+    ### LOAD DATA
+    load_string = '1_0_2'
+    recordingsB = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'.npy', allow_pickle=True).item()
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
+
+    times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
+
+    ### COMPUTE CORRELATIONS
+    corr_mat = np.corrcoef([recordingsB[str(i+1)+';BOLD'][:,0] for i in range(6)])
+    for i in range(6):
+        for j in range(6):
+            if i>j: corr_mat[i,j]=0
+
+    ### FIRST PLOT ALL SIX BOLD SIGNALS
+    plt.figure(figsize=(16,9), dpi=500)
+    name=['A','B','C','D','E','F']
+    for i in range(6):
+        plt.subplot(6,1,i+1)
+        plt.plot(times,recordingsB[str(i+1)+';BOLD'])
+        plt.ylim(-0.01,0.01)
+        plt.ylabel('BOLD '+name[i])
+    plt.xlabel('time / ms')
+    
+    plt.tight_layout()
+    plt.savefig('BOLDfromDifferentSources_ANA_correlations_signals.png')
+
+    ### SECOND PLOT CORRELATION MATRIX
+    plt.figure(figsize=(10,10), dpi=500)
+    ax = plt.subplot(111)
+    plt.imshow(corr_mat, vmin=-1, vmax=1, cmap='bwr')
+    plt.xticks(list(range(6)), ['A','B','C','D','E','F'])
+    plt.yticks(list(range(6)), ['A','B','C','D','E','F'])
+    ax.xaxis.set_ticks_position('top')
+    for i in range(6):
+        for j in range(6):
+            if i<=j: plt.text(j,i,str(round(corr_mat[i,j],2)), ha='center', va='center')
+    #plt.colorbar()
+    plt.savefig('BOLDfromDifferentSources_ANA_correlations_matrix.png')
+    
+
+    
 
 
 if __name__=='__main__':
 
     overview_plot=0
-    different_input_strengths_plot=1
+    different_input_strengths_plot=0
+    with_vs_without_norm_plot=0
+    pulses_visu_plot=0
+    correlation_plot=1
     
     if overview_plot:
         if len(sys.argv)==3:
@@ -306,6 +543,15 @@ if __name__=='__main__':
             
     if different_input_strengths_plot:
         different_input_strengths()
+
+    if with_vs_without_norm_plot:
+        with_vs_without_normalization()
+
+    if pulses_visu_plot:
+        pulses_visualization()
+
+    if correlation_plot:
+        BOLD_correlations()
 
 
 

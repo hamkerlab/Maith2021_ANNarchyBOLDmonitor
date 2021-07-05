@@ -1,0 +1,61 @@
+import numpy as np
+import pylab as plt
+
+def set_size(w,h, ax=None):
+    """ w, h: width, height in inches """
+    if not ax: ax=plt.gca()
+    l = ax.figure.subplotpars.left
+    r = ax.figure.subplotpars.right
+    t = ax.figure.subplotpars.top
+    b = ax.figure.subplotpars.bottom
+    figw = float(w)/(r-l)
+    figh = float(h)/(t-b)
+    ax.figure.set_size_inches(figw, figh)
+
+### LOAD DATA
+recordingsB = np.load('../dataRaw/Fig_Balloon_model_data_recordingsB.npy', allow_pickle=True).item()
+simParams   = np.load('../dataRaw/Fig_Balloon_model_data_simParams.npy', allow_pickle=True).item()
+
+times=np.arange(simParams['dt'],simParams['sim_dur1']+simParams['sim_dur2']+simParams['sim_dur3']+simParams['dt'],simParams['dt'])
+
+ylim_dict={'f_in':    [1, 1.7],
+           'v':       [1, 1.7],
+           'f_out':   [1, 1.7],
+           'BOLD':    [1, 0.015],
+           'CBF':     [1, 1.7],
+           'CMRO2':   [1, 1.7],
+           'r':       [1, 0.23],
+           'I_CBF':   [1, 0.23],
+           'I_CMRO2': [1, 0.23],
+           'q':       [2, 0.75],
+           'E':       [2, 0.22],
+           's':       [2,-0.2],
+           'sCBF':    [2,-0.2],
+           'sCMRO2':  [2,-0.2]}
+
+### FIGURE
+for key in recordingsB.keys():
+    plt.figure(dpi=500)
+    plt.axhline(recordingsB[key][0,0], color='grey')
+    plt.plot(times, recordingsB[key][:,0], color='k')
+    plt.xlim(times[0],times[-1])
+    if ylim_dict[key.split(';')[1]][0] == 1:
+        ## initial value is at 20%
+        y100 = ylim_dict[key.split(';')[1]][1]
+        y20  = recordingsB[key][0,0]
+        y0   = y20 + (y20 - y100) * (1/4.)
+        plt.ylim(y0, y100)
+    else:
+        ## initial value is at 50%
+        y50  = recordingsB[key][0,0]
+        y0   = ylim_dict[key.split(';')[1]][1]
+        y100 = y50 + (y50-y0)
+        plt.ylim(y0,y100)
+    plt.title(key)
+    plt.subplots_adjust(left=0.3, top=0.7)
+    set_size(2.03/2.54,1.35/2.54)
+    plt.savefig('../results/Fig_Balloon_model_data/'+key.replace(';','_')+'.svg')
+
+
+
+

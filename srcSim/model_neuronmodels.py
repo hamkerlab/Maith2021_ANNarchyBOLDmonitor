@@ -3,6 +3,8 @@ from parameters import params, rng
 
 setup(dt=params['dt'])
 setup(num_threads=params['num_threads'])
+if params['seed']!=None:
+    setup(seed=params['seed'])
 Constant('RS_v_r',params['RS_v_r'])
 Constant('FS_v_r',params['FS_v_r'])
 

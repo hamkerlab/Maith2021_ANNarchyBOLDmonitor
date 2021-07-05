@@ -1,6 +1,5 @@
 from ANNarchy import *
 from ANNarchy.extensions.bold import *
-import pylab as plt
 import sys
 from model import params, rng, newBoldNeuron, add_scaled_projections, BoldNeuron_r
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
@@ -181,7 +180,7 @@ def initialTestofBOLD():
 
 
 
-def BOLDfromDifferentSources(input_factor=1, stimulus=0):
+def BOLDfromDifferentSources(input_factor=1.0, stimulus=0):
     #########################################   IMPORTANT SIMULATION PARAMS   ###########################################
     simParams={}
     for key in ['dt', 'input', 'corE_popsize']:
@@ -193,7 +192,10 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
         simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [5000,20000,0]#ms
     elif stimulus==1:
         ## short input pulse
-        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [5000,100,19900]#ms
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [10000,100,14900]#ms
+    elif stimulus==2:
+        ## long resting period where only BOLD is recorded
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [10*60*1000,0,0]#ms
     else:
         print('second argument, stimulus, has to be 0 or 1')
         quit()
@@ -213,16 +215,18 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
 
 
     ###################################################   MONITORS   ####################################################
-    if params['input']=='Current':
-        monDict={'pop;inputPop':['r'],
-                 'pop;corEL1':['syn', 'spike'],
-                 'pop;corIL1':['syn', 'spike']}
-    elif params['input']=='Poisson':
-        monDict={'pop;inputPop':['spike'],
-                 'pop;corEL1':['syn', 'spike', 'var_r', 'var_ra', 'r'],
-                 'pop;corIL1':['syn', 'spike', 'var_r', 'var_ra', 'r']}
-    mon={}
-    mon=addMonitors(monDict,mon)
+    if stimulus!=2:
+        ### DEACTIVATE MONITORS FOR LONG RESTING SIMULATION
+        if params['input']=='Current':
+            monDict={'pop;inputPop':['r'],
+                     'pop;corEL1':['syn', 'spike'],
+                     'pop;corIL1':['syn', 'spike']}
+        elif params['input']=='Poisson':
+            monDict={'pop;inputPop':['spike'],
+                     'pop;corEL1':['syn', 'spike', 'var_r', 'var_ra', 'r'],
+                     'pop;corIL1':['syn', 'spike', 'var_r', 'var_ra', 'r']}
+        mon={}
+        mon=addMonitors(monDict,mon)
 
 
 
@@ -239,6 +243,9 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="syn",
                             recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
+    monB['1withoutNorm'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
+                                       input_variables="syn",
+                                       recorded_variables=["BOLD", "r", "f_in"])
     monB['1Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="syn",
@@ -347,24 +354,25 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
                             recorded_variables=["I_CBF","I_CMRO2"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
-    monDictB={'BOLD;1':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;1Eraw': ['r'],
-              'BOLD;1Iraw': ['r'],
-              'BOLD;2':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;2Eraw': ['r'],
-              'BOLD;2Iraw': ['r'],
-              'BOLD;3':     ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;3Eraw': ['r'],
-              'BOLD;3Iraw': ['r'],
-              'BOLD;4':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;4Eraw': ["I_CBF","I_CMRO2"],
-              'BOLD;4Iraw': ["I_CBF","I_CMRO2"],
-              'BOLD;5':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;5Eraw': ["I_CBF","I_CMRO2"],
-              'BOLD;5Iraw': ["I_CBF","I_CMRO2"],
-              'BOLD;6':     ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;6Eraw': ["I_CBF","I_CMRO2"],
-              'BOLD;6Iraw': ["I_CBF","I_CMRO2"]}
+    monDictB={'BOLD;1':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;1withoutNorm': ['BOLD', 'r', "f_in"],
+              'BOLD;1Eraw':        ['r'],
+              'BOLD;1Iraw':        ['r'],
+              'BOLD;2':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;2Eraw':        ['r'],
+              'BOLD;2Iraw':        ['r'],
+              'BOLD;3':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;3Eraw':        ['r'],
+              'BOLD;3Iraw':        ['r'],
+              'BOLD;4':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;4Eraw':        ["I_CBF","I_CMRO2"],
+              'BOLD;4Iraw':        ["I_CBF","I_CMRO2"],
+              'BOLD;5':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;5Eraw':        ["I_CBF","I_CMRO2"],
+              'BOLD;5Iraw':        ["I_CBF","I_CMRO2"],
+              'BOLD;6':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;6Eraw':        ["I_CBF","I_CMRO2"],
+              'BOLD;6Iraw':        ["I_CBF","I_CMRO2"]}
 
 
 
@@ -374,7 +382,7 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
     ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
     kCBF = 1/2.46
     kCMRO2 = 2*kCBF
-    for monID in ['4','5']:
+    for monID in ['4','5','6']:
         monB[monID].k_CBF=kCBF
         monB[monID].k_CMRO2=kCMRO2
         monB[monID].c_CBF=0.6*np.sqrt(4*kCBF)
@@ -392,7 +400,9 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
     ### START MONITORS
 
     ## standard monitors
-    startMonitors(monDict,mon)
+    if stimulus!=2:
+        ## DEACTIVATE MONITORS FOR LONG RESTING SIMULATION
+        startMonitors(monDict,mon)
 
     ## BOLD monitors
     startMonitors(monDictB,monB)
@@ -411,8 +421,9 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
     ### GET MONITORS
 
     ## standard monitors
-    recordings={}
-    recordings=getMonitors(monDict,mon,recordings)
+    if stimulus!=2:
+        recordings={}
+        recordings=getMonitors(monDict,mon,recordings)
 
     ## BOLD monitors
     recordingsB={}
@@ -420,9 +431,11 @@ def BOLDfromDifferentSources(input_factor=1, stimulus=0):
     
 
     ### SAVE DATA
-    np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordings_'+save_string+'.npy',recordings)
+    if stimulus!=2: np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordings_'+save_string+'.npy',recordings)
     np.save('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+save_string+'.npy',recordingsB)
     np.save('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+save_string+'.npy',simParams)
+
+
 
 
 if __name__=='__main__':

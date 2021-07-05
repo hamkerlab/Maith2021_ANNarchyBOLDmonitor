@@ -2,9 +2,12 @@ from ANNarchy import LogNormal, Uniform
 import numpy as np
 from extras import generateInputs, scaledANNarchyLogNormal
 
-rng = np.random.default_rng()
 
 params={}
+### random number generator
+params['seed'] = 1
+rng = np.random.default_rng(params['seed'])
+
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
