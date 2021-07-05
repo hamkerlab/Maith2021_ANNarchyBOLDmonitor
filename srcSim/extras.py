@@ -135,6 +135,35 @@ def scaledANNarchyLogNormal(rng, scale=1.0):
         optional scale this distribution
     """
     return LogNormal(mu=-1.5+np.log(scale), sigma=0.93, max=generateInputs(0,-1.5+np.log(scale),0.93,1,rng)['threshold'])
+    
+    
+def get_log_normal_fit(rates):
+    """
+        rates: array of firing rates
+        
+        return: fitted log normal distribution to firing rate distribution
+    """
+    
+    ### fit lognorm to rates
+    if len(rates[rates>=0])>0:
+        shape,loc,scale = lognorm.fit(rates[rates>=0])
+        sigma=shape
+        mu=np.log(scale)
+    else:
+        mu, sigma, loc = 0, 0.1, -2
+    return np.array([mu,sigma,loc])
+    
+
+def set_size(w,h, ax=None):
+    """ w, h: width, height in inches """
+    if not ax: ax=plt.gca()
+    l = ax.figure.subplotpars.left
+    r = ax.figure.subplotpars.right
+    t = ax.figure.subplotpars.top
+    b = ax.figure.subplotpars.bottom
+    figw = float(w)/(r-l)
+    figh = float(h)/(t-b)
+    ax.figure.set_size_inches(figw, figh)
 
 
 

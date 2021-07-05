@@ -2,7 +2,14 @@ import numpy as np
 import pylab as plt
 import sys
 from ANNarchy import raster_plot
-from initialTestofBOLD_ANA import get_pop_rate
+from scipy import stats
+from extras import set_size, get_pop_rate
+
+font = {'family' : 'Arial',
+        'weight' : 'normal',
+        'size'   : 8}
+
+plt.rc('font', **font)
 
 def spikeActivityPlot(title='', spikes=None, simParams={}, times=[], ax=None):
     try:
@@ -58,26 +65,34 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
         plots one column of the with vs without normalization plot
     """
     ### FIRST ROW
-    plt.subplot(3,2,col+1)
+    ax=plt.subplot(3,2,col+1)
     plt.title(title)
-    plt.plot(times, recordingsB_pulse[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='k', label='pulse')
-    plt.plot(times, recordingsB_rest[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='grey', ls='dashed', label='resting')
+    plt.plot(times, recordingsB_rest[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='black', label='resting')
+    plt.plot(times, recordingsB_pulse[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='red', ls='dashed', label='pulse')
     plt.ylim(-0.3,1.05)
+    ax.set_xticklabels([])
     if col==0: plt.ylabel('I')
-    if col==1: plt.legend()
+    if col==1: ax.set_yticklabels([])
     ### SECOND ROW
-    plt.subplot(3,2,col+3)
-    plt.plot(times, recordingsB_pulse[mon_name+';f_in'][:,0], color='k')
-    plt.plot(times, recordingsB_rest[mon_name+';f_in'][:,0], color='grey', ls='dashed')
+    ax=plt.subplot(3,2,col+3)
+    plt.plot(times, recordingsB_rest[mon_name+';f_in'][:,0], color='black')
+    plt.plot(times, recordingsB_pulse[mon_name+';f_in'][:,0], color='red', ls='dashed')
     plt.ylim(0.87,1.27)
+    ax.set_xticklabels([])
     if col==0: plt.ylabel('CBF')
+    if col==1:
+        ax.set_yticklabels([])
     ### THIRD ROW
-    plt.subplot(3,2,col+5)
-    plt.plot(times, recordingsB_pulse[mon_name+';BOLD'][:,0], color='k')
-    plt.plot(times, recordingsB_rest[mon_name+';BOLD'][:,0], color='grey', ls='dashed')
-    plt.ylim(-0.01, 0.01)
-    plt.xlabel('time / ms')
-    if col==0: plt.ylabel('BOLD')
+    ax=plt.subplot(3,2,col+5)
+    plt.plot(times, recordingsB_rest[mon_name+';BOLD'][:,0]*100, color='black', label='resting')
+    plt.plot(times, recordingsB_pulse[mon_name+';BOLD'][:,0]*100, color='red', label='pulse', ls='dashed')
+    plt.ylim(-1.0, 1.0)
+    plt.xlabel('time [ms]')
+    if col==0:
+        plt.ylabel('BOLD [%]')
+        plt.legend()
+    if col==1:
+        ax.set_yticklabels([])
 
 def pulses_visualization_plot_row(row, ylabel,recordingsB, times, simParams):
     """
@@ -103,6 +118,53 @@ def pulses_visualization_plot_row(row, ylabel,recordingsB, times, simParams):
     plt.ylim(-0.005,0.015)
     if row==0: plt.title('BOLD')
     if row==5: plt.xlabel('time / ms')
+
+def get_firing_rates(spikes, dur):
+    """
+        spikes: list of ANNarchy spike dictionaries
+        dur: length of time period in ms
+        
+        return firing rate distribution of population
+    """
+    
+    ### collect all spike dicts into one spike dict
+    spike_dict_all={}
+    for idx, spike_dict in enumerate(spikes):
+        for key, val in spike_dict.items():
+            spike_dict_all[str(idx)+'_'+str(key)]=val
+    
+    ### obtain firing rate over all neurons of spike_dict_all
+    rate = []
+    for neuron, train in spike_dict_all.items():
+        rate.append(len(train)/(dur/1000.))
+    return np.array(rate)
+
+def get_log_normal_fit(rates):
+    """
+        rates: array of firing rates
+        
+        return: fitted log normal distribution to firing rate distribution
+    """
+    
+    ### fit lognorm to rates
+    if len(rates[rates>=0])>0:
+        shape,loc,scale = stats.lognorm.fit(rates[rates>=0])
+        sigma=shape
+        mu=np.log(scale)
+    else:
+        mu, sigma, loc = 0, 0.1, -2
+    return np.array([mu,sigma,loc])
+
+def lognormalPDF(x, mu=-0.702, sigma=0.9355, shift=0):
+    """
+        standard values from lognormal distribution of PSPs from Song et al. (2005)
+    """
+    x=x-shift
+    if x.min()<=0:
+        return np.concatenate([ np.zeros(x[x<=0].size) , np.exp(-(np.log(x[x>0]) - mu)**2 / (2 * sigma**2)) / (x[x>0] * sigma * np.sqrt(2 * np.pi)) ])
+    else:
+        return np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2)) / (x * sigma * np.sqrt(2 * np.pi))
+    
         
 
 
@@ -158,7 +220,7 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plotAverageOfNeuronVariables(title='corI var_r', variables=[recordings['corIL1;var_r'],recordings['corIL1;var_ra']], labels=['var_r','var_ra'], times=times, ax=ax, simParams=simParams)
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_overview_standard.png')
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_overview_standard.png')
 
 
     ### NEXT FIGURE WITH BOLD MONITORS
@@ -307,7 +369,7 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plt.plot(times, recordingsB['6;BOLD'][:,0])
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_overview_BOLD.png')
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_overview_BOLD.png')
     
 
     
@@ -415,7 +477,7 @@ def different_input_strengths():
             plt.plot(input_factor_list,y_values[:,4,row],color='k')
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_different_input_strengths.png')
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_different_input_strengths.png')
 
 
 
@@ -435,15 +497,15 @@ def with_vs_without_normalization():
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
 
     ### PLOT
-    plt.figure(figsize=(16,9),dpi=500)
+    plt.figure(figsize=(8.5/2.54,8.5/2.54),dpi=500)
 
     ## WITHOUT NORMALIZATION
     normalization_plot_column(title='without normalization', mon_name='1withoutNorm', col=0, times=times, recordingsB_pulse=recordingsB_pulse, recordingsB_rest=recordingsB_rest)
     ## WITH NORMALIZATION
     normalization_plot_column(title='with normalization', mon_name='1', col=1, times=times, recordingsB_pulse=recordingsB_pulse, recordingsB_rest=recordingsB_rest)
     
-    plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_with_vs_without_norm.png')
+    plt.tight_layout(pad=0.1, h_pad=0.1, w_pad=0.2)
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_with_vs_without_norm.svg')
 
 
 
@@ -461,14 +523,41 @@ def pulses_visualization():
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
 
 
-    ### PLOT
+    ### PLOT WITH ALL DATA
     plt.figure(figsize=(10,12),dpi=500)
 
     for row, label in enumerate(['A','B','C','D','E','F']):
         pulses_visualization_plot_row(row, label, recordingsB, times, simParams)
 
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_pulses_visualization.png', dpi=500)
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_pulses_visualization.png', dpi=500)
+    
+    
+    ### SINGLE PLOTS FOR MANUSCRIPT
+    for row, label in enumerate(['A','B','C','D','E','F']):
+    
+        ### CBF/CMRO2 PLOTS
+        plt.figure()
+        plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
+        if row<3:
+            plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
+        else:
+            plt.plot(times, recordingsB[str(row+1)+';CBF'][:,0],label='CBF', color='red')
+            plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='blue', ls='dashed')
+            if row==3: plt.legend()
+        plt.ylim(0.85,1.7)
+        plt.tight_layout(pad=10)
+        set_size(4.89/2.54,2.08/2.54)
+        plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/CBF_CMRO2_'+label+'.svg')
+        
+        ### BOLD PLOTS
+        plt.figure()
+        plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
+        plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
+        plt.ylim(-0.005,0.015)
+        plt.tight_layout(pad=10)
+        set_size(4.89/2.54,2.08/2.54)
+        plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/BOLD_'+label+'.svg')
 
 
 
@@ -503,7 +592,7 @@ def BOLD_correlations():
     plt.xlabel('time / ms')
     
     plt.tight_layout()
-    plt.savefig('BOLDfromDifferentSources_ANA_correlations_signals.png')
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_correlations_signals.png')
 
     ### SECOND PLOT CORRELATION MATRIX
     plt.figure(figsize=(10,10), dpi=500)
@@ -516,7 +605,39 @@ def BOLD_correlations():
         for j in range(6):
             if i<=j: plt.text(j,i,str(round(corr_mat[i,j],2)), ha='center', va='center')
     #plt.colorbar()
-    plt.savefig('BOLDfromDifferentSources_ANA_correlations_matrix.png')
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_correlations_matrix.png')
+
+
+
+def rate_distribution():
+    """
+        load data of standard simulation (no stimulus change)
+        plot firing rate distribution of combined corEL1 and corIL1
+    """
+
+    ### LOAD DATA
+    load_string = '1_0_0'
+    recordings  = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordings_'+load_string+'.npy', allow_pickle=True).item()
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
+
+    times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
+    
+    ### OBTAIN FIRING RATES OF ALL NEURONS
+    firing_rates = get_firing_rates([recordings['corEL1;spike'],recordings['corIL1;spike']], simParams['sim_dur'])
+    
+    ### OBTAIN FITTED LOG NORMAL DISTRIBUTION
+    fit = get_log_normal_fit(firing_rates)
+    
+    ### PLOT HISTOGRAM AND FITTED AND EXPERIMENTAL DISTRIBUTION
+    plt.figure()
+    x=np.linspace(0,40,1000)
+
+    plt.hist(firing_rates, 75, density=True, align='mid', alpha=0.5, color='grey')
+    plt.plot(x,lognormalPDF(x, mu=1.2, sigma=1.1), label='Buzsaki & Mizuseki (2014)', color='k')
+    plt.plot(x, lognormalPDF(x, mu=fit[0], sigma=fit[1], shift=fit[2]), label='Model', color='red', ls='dashed')
+    plt.legend(fontsize=8)
+    set_size(5.93/2.54,2.44/2.54)
+    plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_rate_distribution.svg')
     
 
     
@@ -527,8 +648,9 @@ if __name__=='__main__':
     overview_plot=0
     different_input_strengths_plot=0
     with_vs_without_norm_plot=0
-    pulses_visu_plot=0
-    correlation_plot=1
+    pulses_visu_plot=1
+    correlation_plot=0
+    rate_dist_plot=0
     
     if overview_plot:
         if len(sys.argv)==3:
@@ -552,6 +674,9 @@ if __name__=='__main__':
 
     if correlation_plot:
         BOLD_correlations()
+        
+    if rate_dist_plot:
+        rate_distribution()
 
 
 

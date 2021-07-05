@@ -2,7 +2,7 @@ from ANNarchy import *
 import pylab as plt
 from scipy import signal, stats
 from model_neuronmodels import params, rng, Izhikevich2007RS, Izhikevich2007FS
-from extras import lognormalPDF
+from extras import lognormalPDF, get_log_normal_fit, set_size
 
 
 ### create 1000 neurons of each neurontype
@@ -23,14 +23,14 @@ inputPopcorE = Projection(
     post   = corE, 
     target = 'ampa',
     name = 'inputPopcorE'
-).connect_all_to_all(weights = LogNormal(mu=-1.5, sigma=0.93))#weights scaled to obtain PSP dist
+).connect_all_to_all(weights = params['weightDist'](rng))#weights have specific log normal dist to obtain PSP dist
 
 inputPopcorI = Projection( 
     pre    = inputPop,
     post   = corI, 
     target = 'ampa',
     name = 'inputPopcorI'
-).connect_all_to_all(weights = LogNormal(mu=-1.5, sigma=0.93))#weights scaled to obtain PSP dist
+).connect_all_to_all(weights = params['weightDist'](rng))#weights have specific log normal dist to obtain PSP dist
 
 
 """
@@ -56,12 +56,12 @@ compile()
 
 ### compare weight distribution with target EPSP distribution
 plt.figure()
-x=np.arange(0.01,10,0.01)
+x=np.arange(0.01,7.5,0.01)
 plt.hist(np.array(inputPopcorE.w).flatten(), 100, density=True, align='mid', label='weights')
 plt.plot(x, lognormalPDF(x), label='EPSPs Song et al. (2005)')
 plt.xlim(0,10)
 plt.legend()
-plt.savefig('../results/get_weightDist_weightsE_dist.svg')
+plt.savefig('../results/get_weightDist/get_weightDist_weightsE_dist.svg')
 
 
 ### record membranepotential of both neurons
@@ -114,7 +114,7 @@ plt.axvline(maxPosI[999],color='C2')
 plt.axhline(maxValI[0],color='C0')
 plt.axhline(maxValI[1],color='C1')
 plt.axhline(maxValI[999],color='C2')
-plt.savefig('../results/get_weightDist_PSPexamples.svg')
+plt.savefig('../results/get_weightDist/get_weightDist_PSPexamples.svg')
 
 
 
@@ -135,5 +135,37 @@ plt.hist(PSPsI[PSPsI<=10], 100, density=True, align='mid', label='EPSPs in CorI'
 plt.plot(x,lognormalPDF(x), label='EPSPs Song et al. (2005)')
 plt.xlim(0,10)
 plt.legend()
-plt.savefig('../results/get_weightDist_PSP_dist.svg')
+plt.savefig('../results/get_weightDist/get_weightDist_PSP_dist.svg')
+
+
+
+### COMPARISON COMBINED PSP DISTRIBUTION SIMULATION (E+I) VS EXPERIMENTAL
+
+## COMBINE PSP DISTRIBUTIONS OF E AND I
+PSP_dist = np.concatenate([PSPsE, PSPsI])
+
+### OBTAIN FITTED LOG NORMAL DISTRIBUTION
+fit = get_log_normal_fit(PSP_dist)
+
+## PLOT
+plt.figure()
+plt.hist(PSP_dist[PSP_dist<=10], 100, density=True, align='mid', color='grey', alpha=0.5)
+plt.plot(x,lognormalPDF(x), label='Song et al. (2005)', color='k')
+plt.plot(x, lognormalPDF(x, mu=fit[0], sigma=fit[1], shift=fit[2]), label='Model', color='red', ls='dashed')
+plt.legend(fontsize=8)
+set_size(5.93/2.54,2.44/2.54)
+plt.savefig('../results/get_weightDist/get_weightDist_combined_PSP_dist.svg')
+
+
+
+
+
+
+
+
+
+
+
+
+
 

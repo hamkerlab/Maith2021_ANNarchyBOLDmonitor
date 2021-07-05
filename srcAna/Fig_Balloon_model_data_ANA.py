@@ -1,16 +1,6 @@
 import numpy as np
 import pylab as plt
-
-def set_size(w,h, ax=None):
-    """ w, h: width, height in inches """
-    if not ax: ax=plt.gca()
-    l = ax.figure.subplotpars.left
-    r = ax.figure.subplotpars.right
-    t = ax.figure.subplotpars.top
-    b = ax.figure.subplotpars.bottom
-    figw = float(w)/(r-l)
-    figh = float(h)/(t-b)
-    ax.figure.set_size_inches(figw, figh)
+from extras import set_size
 
 ### LOAD DATA
 recordingsB = np.load('../dataRaw/Fig_Balloon_model_data_recordingsB.npy', allow_pickle=True).item()
