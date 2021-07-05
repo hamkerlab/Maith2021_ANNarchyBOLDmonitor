@@ -4,5 +4,5 @@
 
 ### specific files
 *.npy
-*test*.svg
-*test*.png
+*.svg
+*.png
