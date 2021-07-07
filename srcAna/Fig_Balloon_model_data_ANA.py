@@ -45,6 +45,22 @@ for key in recordingsB.keys():
     plt.subplots_adjust(left=0.3, top=0.7)
     set_size(2.03/2.54,1.35/2.54)
     plt.savefig('../results/Fig_Balloon_model_data/'+key.replace(';','_')+'.svg')
+    
+
+### EXTRA FIGURE
+plt.figure(figsize=(16,9), dpi=500)
+plt.axhline(1, color='grey')
+plt.plot(times, recordingsB['2;CBF'], label='CBF')
+plt.plot(times, recordingsB['2;CMRO2'], label='CMRO2')
+## AX LIMITS
+plt.xlim(times[0],times[-1])
+y100 = ylim_dict['CBF'][1]
+y20  = 1
+y0   = y20 + (y20 - y100) * (1/4.)
+plt.ylim(y0, y100)
+plt.legend()
+## SAVE
+plt.savefig('../results/Fig_Balloon_model_data/extra_fig.png')
 
 
 

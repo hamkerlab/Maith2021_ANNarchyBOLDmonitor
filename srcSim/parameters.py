@@ -5,8 +5,13 @@ from extras import generateInputs, scaledANNarchyLogNormal
 
 params={}
 ### random number generator
-params['seed'] = 1
-rng = np.random.default_rng(params['seed'])
+params['seed'] = None# int or None
+if params['seed']!=None:
+    rng = np.random.default_rng(params['seed'])
+else:
+    rng = np.random.default_rng()
+    params['seed'] = rng.integers(0,2**32 - 1)
+    rng = np.random.default_rng(params['seed'])
 
 ### general ANNarchy params
 params['dt'] = 0.1

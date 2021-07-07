@@ -94,7 +94,7 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
     if col==1:
         ax.set_yticklabels([])
 
-def pulses_visualization_plot_row(row, ylabel,recordingsB, times, simParams):
+def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
     """
         plots one row of the pulses visualization plot
     """
@@ -110,12 +110,12 @@ def pulses_visualization_plot_row(row, ylabel,recordingsB, times, simParams):
         plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='grey', ls='dashed')
         if row==3: plt.legend()
         if row==5: plt.xlabel('time / ms')
-    plt.ylim(0.85,1.7)
+    plt.ylim(0.8,1.65)
     ### RIGHT COLUMN
     plt.subplot(6,2,2*row+2)
     plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
-    plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
-    plt.ylim(-0.005,0.015)
+    plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='pulse', color='k')
+    plt.ylim(-0.01,0.015)
     if row==0: plt.title('BOLD')
     if row==5: plt.xlabel('time / ms')
 
@@ -517,7 +517,16 @@ def pulses_visualization():
 
     ### LOAD DATA
     load_string = '5_0_1'
-    recordingsB = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'.npy', allow_pickle=True).item()
+    
+    ## LOAD recordingsB 20 TIMES AND AVERAGE THE RECORDINGS
+    recordingsB={}
+    for sim_id in range(20):
+        recordingsB_loaded = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'__'+str(int(sim_id))+'.npy', allow_pickle=True).item()
+        for key,val in recordingsB_loaded.items():
+            try:
+                recordingsB[key]+=recordingsB_loaded[key]/20
+            except:
+                recordingsB[key]=recordingsB_loaded[key]/20
     simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
 
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
@@ -545,7 +554,7 @@ def pulses_visualization():
             plt.plot(times, recordingsB[str(row+1)+';CBF'][:,0],label='CBF', color='red')
             plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='blue', ls='dashed')
             if row==3: plt.legend()
-        plt.ylim(0.85,1.7)
+        plt.ylim(0.8,1.65)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/CBF_CMRO2_'+label+'.svg')
@@ -554,7 +563,7 @@ def pulses_visualization():
         plt.figure()
         plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
         plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
-        plt.ylim(-0.005,0.015)
+        plt.ylim(-0.01,0.015)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/BOLD_'+label+'.svg')

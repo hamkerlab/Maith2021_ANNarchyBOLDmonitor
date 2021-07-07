@@ -56,7 +56,7 @@ compile('annarchy_fig_Balloon_model')
 
 ## INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
 kCBF = 1/2.46
-kCMRO2 = 2*kCBF
+kCMRO2 = 10*kCBF
 for monID in ['2']:
     monB[monID].k_CBF=kCBF
     monB[monID].k_CMRO2=kCMRO2

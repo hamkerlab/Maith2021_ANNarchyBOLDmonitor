@@ -180,10 +180,10 @@ def initialTestofBOLD():
 
 
 
-def BOLDfromDifferentSources(input_factor=1.0, stimulus=0):
+def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
     #########################################   IMPORTANT SIMULATION PARAMS   ###########################################
     simParams={}
-    for key in ['dt', 'input', 'corE_popsize']:
+    for key in ['dt', 'input', 'corE_popsize', 'seed']:
         simParams[key]=params[key]
     simParams['rampUp']=2000#ms !!!ATTENTION!!! rampUp has to be >= firingRateWindow otherwise firing rate starts at a wrong value
     simParams['stimulus']=stimulus
@@ -200,10 +200,12 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0):
         print('second argument, stimulus, has to be 0 or 1')
         quit()
     simParams['sim_dur']=simParams['sim_dur1'] + simParams['sim_dur2'] + simParams['sim_dur3']
-    simParams['BOLDbaseline']=2000#ms
-    simParams['firingRateWindow']=10#ms
+    simParams['BOLDbaseline']=5000#ms
+    simParams['firingRateWindow']=20#ms
     simParams['input_factor']=input_factor
     save_string = str(simParams['input_factor']).replace('.','_')+'_'+str(simParams['stimulus']).replace('.','_')
+    if len(simID)>0:
+        save_string=save_string+'__'+simID
 
 
     #########################################   ADD PROJECTIONS IF MODEL v2   ###########################################
@@ -377,11 +379,11 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0):
 
 
     ####################################################   COMPILE   ####################################################
-    compile('annarchy_'+save_string)
+    compile('annarchy_'+save_string.split('__')[0])
 
     ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
     kCBF = 1/2.46
-    kCMRO2 = 2*kCBF
+    kCMRO2 = 10*kCBF
     for monID in ['4','5','6']:
         monB[monID].k_CBF=kCBF
         monB[monID].k_CMRO2=kCMRO2
@@ -440,7 +442,10 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0):
 
 if __name__=='__main__':
 
-    if len(sys.argv)==3:
+    if len(sys.argv)==4:
+        ## optional input_factor, stimulus and simulation ID given
+        BOLDfromDifferentSources(input_factor=float(sys.argv[1]), stimulus=int(sys.argv[2]), simID=str(int(sys.argv[3])))
+    elif len(sys.argv)==3:
         ## optional input_factor and stimulus given
         BOLDfromDifferentSources(input_factor=float(sys.argv[1]), stimulus=int(sys.argv[2]))
     elif len(sys.argv)==2:

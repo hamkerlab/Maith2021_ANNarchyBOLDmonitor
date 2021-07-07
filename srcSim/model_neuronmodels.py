@@ -3,8 +3,7 @@ from parameters import params, rng
 
 setup(dt=params['dt'])
 setup(num_threads=params['num_threads'])
-if params['seed']!=None:
-    setup(seed=params['seed'])
+setup(seed=params['seed'])
 Constant('RS_v_r',params['RS_v_r'])
 Constant('FS_v_r',params['FS_v_r'])
 
@@ -42,10 +41,10 @@ Izhikevich2007RS = Neuron(
         du/dt      = a*(b*(v - v_r) - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
-        var_fa  = abs(I_ampa) + 1.5*abs(I_gaba)**2
-        var_r  = abs(I_ampa) 
-        var_ra = abs(I_ampa) 
+        var_f  = pos(I_ampa) + 1.5*neg(I_gaba)
+        var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
+        var_r  = pos(I_ampa) 
+        var_ra = pos(I_ampa) 
     """,
     spike = "v >= v_peak",
     reset = """
@@ -87,9 +86,9 @@ Izhikevich2007FS = Neuron(
         du/dt      = a*(U_v - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f  = abs(I_ampa) + 1.5*abs(I_gaba)
-        var_fa  = abs(I_ampa) + 1.5*abs(I_gaba)**2
-        var_r  = abs(I_ampa)
+        var_f  = pos(I_ampa) + 1.5*neg(I_gaba)
+        var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
+        var_r  = pos(I_ampa)
         var_ra = r
     """,
     spike = "v >= v_peak",
