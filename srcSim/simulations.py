@@ -1,6 +1,7 @@
 from ANNarchy import *
 from ANNarchy.extensions.bold import *
 import sys
+import os
 from model import params, rng, newBoldNeuron, add_scaled_projections, BoldNeuron_r
 from extras import getFiringRateDist, lognormalPDF, plot_input_and_raster, addMonitors, startMonitors, getMonitors
 
@@ -46,19 +47,19 @@ def initialTestofBOLD():
     ### ALSO RECORD INPUT (r) OF BOLDNEURON
     monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "I_CBF"])
                             
     ### SCALE THE POPULATION SIGNALS EQUALLY
     monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             scale_factor=[1,1],
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "I_CBF"])
                             
     ### NORMALIZE THE POPULATION SIGNALS WITH BASELINE OVER 2000 ms
     monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[10000,10000],
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r", "f_in"])
+                            recorded_variables=["BOLD", "I_CBF", "f_in"])
                             
     ### USE SELF DEFINED POPULATION SIGNALS (input_variables + BOLD_MODEL (output_variables + bold_model)
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
@@ -66,7 +67,7 @@ def initialTestofBOLD():
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### SELF-DEFINED ONLY corE WITHOUT NORMALIZATION
     monB['6'] = BoldMonitor(populations=get_population('corEL1'),
@@ -74,7 +75,7 @@ def initialTestofBOLD():
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### SELF-DEFINED ONLY corI WITHOUT NORMALIZATION
     monB['7'] = BoldMonitor(populations=get_population('corIL1'),
@@ -82,7 +83,7 @@ def initialTestofBOLD():
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### ONLY corE WITH NORMALIZATION
     monB['8'] = BoldMonitor(populations=get_population('corEL1'),
@@ -91,7 +92,7 @@ def initialTestofBOLD():
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### NLY corI WITH NORMALIZATION
     monB['9'] = BoldMonitor(populations=get_population('corIL1'),
@@ -100,45 +101,37 @@ def initialTestofBOLD():
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
                                 
     ### Standard only corE
     monB['10'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "I_CBF"])
                                 
     ### Standard only corI
     monB['11'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r"])
+                            recorded_variables=["BOLD", "I_CBF"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
     monDictB={'BOLD;1':['BOLD'],
-              'BOLD;2':['BOLD', 'r'],
-              'BOLD;3':['BOLD', 'r'],
-              'BOLD;4':['BOLD', 'r', 'f_in'],
-              'BOLD;5':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;6':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;7':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;8':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;9':["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
-              'BOLD;10':['BOLD', 'r'],
-              'BOLD;11':['BOLD', 'r']}
+              'BOLD;2':['BOLD', 'I_CBF'],
+              'BOLD;3':['BOLD', 'I_CBF'],
+              'BOLD;4':['BOLD', 'I_CBF', 'f_in'],
+              'BOLD;5':["I_CBF","I_CMRO2","f_in","r","BOLD"],
+              'BOLD;6':["I_CBF","I_CMRO2","f_in","r","BOLD"],
+              'BOLD;7':["I_CBF","I_CMRO2","f_in","r","BOLD"],
+              'BOLD;8':["I_CBF","I_CMRO2","f_in","r","BOLD"],
+              'BOLD;9':["I_CBF","I_CMRO2","f_in","r","BOLD"],
+              'BOLD;10':['BOLD', 'I_CBF'],
+              'BOLD;11':['BOLD', 'I_CBF']}
 
 
 
     ####################################################   COMPILE   ####################################################
     compile()
-
-    ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
-    kCBF = 1/2.46
-    kCMRO2 = 2*kCBF
-    monB['5'].k_CBF=kCBF
-    monB['5'].k_CMRO2=kCMRO2
-    monB['5'].c_CBF=0.6*np.sqrt(4*kCBF)
-    monB['5'].c_CMRO2=np.sqrt(4*kCMRO2)
     
 
 
@@ -244,36 +237,36 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
     monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="syn",
-                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
+                            recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['1withoutNorm'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                                        input_variables="syn",
-                                       recorded_variables=["BOLD", "r", "f_in"])
+                                       recorded_variables=["BOLD", "I_CBF", "f_in"])
     monB['1Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="syn",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
     monB['1Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
                                 input_variables="syn",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
                             
     ### single input: excitatory syn input
     monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="g_ampa",
-                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
+                            recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['2Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="g_ampa",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
     monB['2Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
                                 input_variables="g_ampa",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
     
     ### single input: firing rate
     ## to record firing rate from spiking populations it has to be calculated
@@ -283,17 +276,17 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
     monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
                             input_variables="r",
-                            recorded_variables=["BOLD", "r", "f_in", "E", "q", "v", "f_out"])
+                            recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['3Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
                                 input_variables="r",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
     monB['3Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
                                 input_variables="r",
                                 bold_model=BoldNeuron_r,
-                                recorded_variables=["r"])
+                                recorded_variables=["I_CBF"])
     
     ### two inputs: Buxton (2012, 2014, 2021), excitatory --> CMRO2&CBF, inhibitory --> CBF, use post-synaptic currents as driving signals (they likely cause metabolism)
     monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
@@ -301,7 +294,7 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
                             input_variables=["var_f","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['4Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
                             input_variables=["var_f","var_r"],
@@ -321,7 +314,7 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
                             input_variables=["var_f","var_ra"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['5Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
                             input_variables=["var_f","var_ra"],
@@ -341,7 +334,7 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
                             input_variables=["var_fa","var_r"],
                             output_variables=["I_f","I_r"],
                             bold_model=newBoldNeuron,
-                            recorded_variables=["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"])
+                            recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['6Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
                             input_variables=["var_fa","var_r"],
@@ -356,39 +349,32 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
                             recorded_variables=["I_CBF","I_CMRO2"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
-    monDictB={'BOLD;1':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;1withoutNorm': ['BOLD', 'r', "f_in"],
-              'BOLD;1Eraw':        ['r'],
-              'BOLD;1Iraw':        ['r'],
-              'BOLD;2':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;2Eraw':        ['r'],
-              'BOLD;2Iraw':        ['r'],
-              'BOLD;3':            ['BOLD', 'r', "f_in", "E", "q", "v", "f_out"],
-              'BOLD;3Eraw':        ['r'],
-              'BOLD;3Iraw':        ['r'],
-              'BOLD;4':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+    monDictB={'BOLD;1':            ['BOLD', 'I_CBF', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;1withoutNorm': ['BOLD', 'I_CBF', "f_in"],
+              'BOLD;1Eraw':        ['I_CBF'],
+              'BOLD;1Iraw':        ['I_CBF'],
+              'BOLD;2':            ['BOLD', 'I_CBF', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;2Eraw':        ['I_CBF'],
+              'BOLD;2Iraw':        ['I_CBF'],
+              'BOLD;3':            ['BOLD', 'I_CBF', "f_in", "E", "q", "v", "f_out"],
+              'BOLD;3Eraw':        ['I_CBF'],
+              'BOLD;3Iraw':        ['I_CBF'],
+              'BOLD;4':            ["I_CBF","I_CMRO2","f_in","r","BOLD"],
               'BOLD;4Eraw':        ["I_CBF","I_CMRO2"],
               'BOLD;4Iraw':        ["I_CBF","I_CMRO2"],
-              'BOLD;5':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;5':            ["I_CBF","I_CMRO2","f_in","r","BOLD"],
               'BOLD;5Eraw':        ["I_CBF","I_CMRO2"],
               'BOLD;5Iraw':        ["I_CBF","I_CMRO2"],
-              'BOLD;6':            ["I_CBF","I_CMRO2","CBF","CMRO2","BOLD"],
+              'BOLD;6':            ["I_CBF","I_CMRO2","f_in","r","BOLD"],
               'BOLD;6Eraw':        ["I_CBF","I_CMRO2"],
               'BOLD;6Iraw':        ["I_CBF","I_CMRO2"]}
 
 
 
     ####################################################   COMPILE   ####################################################
-    compile('annarchy_'+save_string.split('__')[0])
+    compile('annarchy_folders/annarchy_'+save_string)
+    if os.getcwd().split('/')[-1]=='annarchy_folders': os.chdir('../')
 
-    ### INITIALIZE PARAMETERS OF OWN BOLD MODEL, kCBF from Friston
-    kCBF = 1/2.46
-    kCMRO2 = 10*kCBF
-    for monID in ['4','5','6']:
-        monB[monID].k_CBF=kCBF
-        monB[monID].k_CMRO2=kCMRO2
-        monB[monID].c_CBF=0.6*np.sqrt(4*kCBF)
-        monB[monID].c_CMRO2=np.sqrt(4*kCMRO2)
     
 
 

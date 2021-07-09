@@ -109,8 +109,8 @@ def simulator(fitparams, rng, m_list=[0,0]):
         dist=getFiringRateDist(recordings[pop+';spike'], 20000)
 
         ### fit lognorm to dist
-        if len(dist[dist>0])>0:
-            shape,loc,scale = stats.lognorm.fit(dist[dist>0])
+        if len(dist[dist>=0])>0:
+            shape,loc,scale = stats.lognorm.fit(dist[dist>=0])
             sigma=shape
             mu=np.log(scale)
         else:
@@ -155,7 +155,7 @@ def simulator(fitparams, rng, m_list=[0,0]):
 
 def run_simulator(fitparams):
     """
-        runs the function simulator with the multiprocessing manager (if function is called sequentially, this stores memory, otherwise same as calling simulator directly)
+        runs the function simulator with the multiprocessing manager (if function is called sequentially, this saves memory, otherwise same as calling simulator directly)
         
         fitparams: list, for description see function simulator
         return: returns dictionary needed for optimization with hyperopt
@@ -166,7 +166,7 @@ def run_simulator(fitparams):
     num_rep = 20
     lossAr = np.zeros(num_rep)
     for i in range(num_rep):
-        print('rep',i)
+        #print('rep',i)
         rng = np.random.default_rng()
         proc = Process(target=simulator,args=(fitparams,rng,m_list))
         proc.start()
@@ -202,13 +202,13 @@ if mode=='optimize':
     best = fmin(
         fn=run_simulator,
         space=[
-            hp.uniform('S_INP', 0.5, 20),
+            hp.uniform('S_INP', 5, 20),
             hp.uniform('S_EI', 0.5, 20),
             hp.uniform('S_IE', 0.5, 20),
             hp.uniform('S_II', 0.5, 20)
         ],
         algo=tpe.suggest,
-        max_evals=1000)
+        max_evals=300)
     fit=testFit(best)
     best['loss'] = fit['loss']
     best['std'] = fit['std']
@@ -218,8 +218,8 @@ if mode=='optimize':
     
 if mode=='test':
     ### LOAD FITTED PARAMETERS
-    best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
-    #fit = {'S_INP':1, 'S_EI':1, 'S_IE':1, 'S_II':1,}
+    #best=np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(simID)+'.npy', allow_pickle=True).item()
+    best = {'S_INP':5, 'S_EI':1, 'S_IE':1, 'S_II':1,}
     ### PRINT LOSS
     result=testFit(best)
     print(simID, best, result)

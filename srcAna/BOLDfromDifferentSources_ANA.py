@@ -21,9 +21,11 @@ def spikeActivityPlot(title='', spikes=None, simParams={}, times=[], ax=None):
         plt.xlim(times[0],times[-1])
         # population rate
         ax2=ax.twinx()
-        ax2.plot(times,get_pop_rate(spikes,simParams,simParams['sim_dur'],t_smooth_ms=-1))
+        firing_rate = get_pop_rate(spikes,simParams,simParams['sim_dur'],t_smooth_ms=-1)
+        ax2.plot(times,firing_rate)
         return 1
     except:
+        print('spikeActivityPlot',title,'did not work')
         return 0
         
 def plotAverageOfNeuronVariables(title='', variables=[], labels=[], times=[], ax=None, simParams={}):
@@ -67,8 +69,8 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
     ### FIRST ROW
     ax=plt.subplot(3,2,col+1)
     plt.title(title)
-    plt.plot(times, recordingsB_rest[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='black', label='resting')
-    plt.plot(times, recordingsB_pulse[mon_name+';r'][:,0]/np.max(recordingsB_pulse[mon_name+';r'][:,0]), color='red', ls='dashed', label='pulse')
+    plt.plot(times, recordingsB_rest[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='black', label='resting')
+    plt.plot(times, recordingsB_pulse[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='red', ls='dashed', label='pulse')
     plt.ylim(-0.3,1.05)
     ax.set_xticklabels([])
     if col==0: plt.ylabel('I')
@@ -77,7 +79,7 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
     ax=plt.subplot(3,2,col+3)
     plt.plot(times, recordingsB_rest[mon_name+';f_in'][:,0], color='black')
     plt.plot(times, recordingsB_pulse[mon_name+';f_in'][:,0], color='red', ls='dashed')
-    plt.ylim(0.87,1.27)
+    plt.ylim(0.9,1.35)
     ax.set_xticklabels([])
     if col==0: plt.ylabel('CBF')
     if col==1:
@@ -86,7 +88,7 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
     ax=plt.subplot(3,2,col+5)
     plt.plot(times, recordingsB_rest[mon_name+';BOLD'][:,0]*100, color='black', label='resting')
     plt.plot(times, recordingsB_pulse[mon_name+';BOLD'][:,0]*100, color='red', label='pulse', ls='dashed')
-    plt.ylim(-1.0, 1.0)
+    plt.ylim(-0.5, 1.0)
     plt.xlabel('time [ms]')
     if col==0:
         plt.ylabel('BOLD [%]')
@@ -106,8 +108,8 @@ def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
         plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='k')
         if row==0: plt.title('CBF / CMRO2')
     else:
-        plt.plot(times, recordingsB[str(row+1)+';CBF'][:,0],label='CBF', color='k')
-        plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='grey', ls='dashed')
+        plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='k')
+        plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='grey', ls='dashed')
         if row==3: plt.legend()
         if row==5: plt.xlabel('time / ms')
     plt.ylim(0.8,1.65)
@@ -115,7 +117,7 @@ def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
     plt.subplot(6,2,2*row+2)
     plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
     plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='pulse', color='k')
-    plt.ylim(-0.01,0.015)
+    plt.ylim(-0.015,0.015)
     if row==0: plt.title('BOLD')
     if row==5: plt.xlabel('time / ms')
 
@@ -168,9 +170,13 @@ def lognormalPDF(x, mu=-0.702, sigma=0.9355, shift=0):
         
 
 
-def two_overview_plots(input_factor=1.0, stimulus=0):
+def two_overview_plots(input_factor=1.0, stimulus=0, sim_id=''):
     ### LOAD DATA
-    load_string = str(input_factor).replace('.','_')+'_'+str(stimulus).replace('.','_')
+    if len(sim_id)>0:
+        load_string = str(input_factor).replace('.','_')+'_'+str(stimulus).replace('.','_')+'__'+sim_id
+    else:
+        load_string = str(input_factor).replace('.','_')+'_'+str(stimulus).replace('.','_')
+
     recordings  = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordings_'+load_string+'.npy', allow_pickle=True).item()
     recordingsB = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'.npy', allow_pickle=True).item()
     simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
@@ -230,13 +236,13 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     ## BOLD1
     plt.subplot(5,6,1)
     plt.title('E raw input')
-    plt.plot(times, recordingsB['1Eraw;r'][:,0])
+    plt.plot(times, recordingsB['1Eraw;I_CBF'][:,0])
     plt.subplot(5,6,7)
     plt.title('I raw input')
-    plt.plot(times, recordingsB['1Iraw;r'][:,0])
+    plt.plot(times, recordingsB['1Iraw;I_CBF'][:,0])
     plt.subplot(5,6,13)
-    plt.title('actual input'+str(round(np.mean(recordingsB['1;r'][:,0]),3)))
-    plt.plot(times, recordingsB['1;r'][:,0])
+    plt.title('actual input'+str(round(np.mean(recordingsB['1;I_CBF'][:,0]),3)))
+    plt.plot(times, recordingsB['1;I_CBF'][:,0])
     plt.subplot(5,6,19)
     plt.title('flow (solid), E (dashed)')
     plt.plot(times, recordingsB['1;f_in'][:,0],label='f_i')
@@ -252,13 +258,13 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     ## SECOND COLUMN
     plt.subplot(5,6,2)
     plt.title('E raw input')
-    plt.plot(times, recordingsB['2Eraw;r'][:,0])
+    plt.plot(times, recordingsB['2Eraw;I_CBF'][:,0])
     plt.subplot(5,6,8)
     plt.title('I raw input')
-    plt.plot(times, recordingsB['2Iraw;r'][:,0])
+    plt.plot(times, recordingsB['2Iraw;I_CBF'][:,0])
     plt.subplot(5,6,14)
-    plt.title('actual input'+str(round(np.mean(recordingsB['2;r'][:,0]),3)))
-    plt.plot(times, recordingsB['2;r'][:,0])
+    plt.title('actual input'+str(round(np.mean(recordingsB['2;I_CBF'][:,0]),3)))
+    plt.plot(times, recordingsB['2;I_CBF'][:,0])
     plt.subplot(5,6,20)
     plt.title('flow (solid), E (dashed)')
     plt.plot(times, recordingsB['2;f_in'][:,0],label='f_i')
@@ -274,13 +280,13 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     ## THIRD COLUMN
     plt.subplot(5,6,3)
     plt.title('E raw input')
-    plt.plot(times, recordingsB['3Eraw;r'][:,0])
+    plt.plot(times, recordingsB['3Eraw;I_CBF'][:,0])
     plt.subplot(5,6,9)
     plt.title('I raw input')
-    plt.plot(times, recordingsB['3Iraw;r'][:,0])
+    plt.plot(times, recordingsB['3Iraw;I_CBF'][:,0])
     plt.subplot(5,6,15)
-    plt.title('actual input'+str(round(np.mean(recordingsB['3;r'][:,0]),3)))
-    plt.plot(times, recordingsB['3;r'][:,0])
+    plt.title('actual input'+str(round(np.mean(recordingsB['3;I_CBF'][:,0]),3)))
+    plt.plot(times, recordingsB['3;I_CBF'][:,0])
     plt.subplot(5,6,21)
     plt.title('flow (solid), E (dashed)')
     plt.plot(times, recordingsB['3;f_in'][:,0],label='f_i')
@@ -311,8 +317,8 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plt.legend()
     plt.subplot(5,6,22)
     plt.title('flow and oxygen')
-    plt.plot(times, recordingsB['4;CBF'][:,0], label='CBF', alpha=0.5)
-    plt.plot(times, recordingsB['4;CMRO2'][:,0], label='CMRO2', alpha=0.5)
+    plt.plot(times, recordingsB['4;f_in'][:,0], label='CBF', alpha=0.5)
+    plt.plot(times, recordingsB['4;r'][:,0], label='CMRO2', alpha=0.5)
     plt.legend()
     plt.subplot(5,6,28)
     plt.title('BOLD')
@@ -336,8 +342,8 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plt.legend()
     plt.subplot(5,6,23)
     plt.title('flow and oxygen')
-    plt.plot(times, recordingsB['5;CBF'][:,0], label='CBF', alpha=0.5)
-    plt.plot(times, recordingsB['5;CMRO2'][:,0], label='CMRO2', alpha=0.5)
+    plt.plot(times, recordingsB['5;f_in'][:,0], label='CBF', alpha=0.5)
+    plt.plot(times, recordingsB['5;r'][:,0], label='CMRO2', alpha=0.5)
     plt.legend()
     plt.subplot(5,6,29)
     plt.title('BOLD')
@@ -361,8 +367,8 @@ def two_overview_plots(input_factor=1.0, stimulus=0):
     plt.legend()
     plt.subplot(5,6,24)
     plt.title('flow and oxygen')
-    plt.plot(times, recordingsB['6;CBF'][:,0], label='CBF', alpha=0.5)
-    plt.plot(times, recordingsB['6;CMRO2'][:,0], label='CMRO2', alpha=0.5)
+    plt.plot(times, recordingsB['6;f_in'][:,0], label='CBF', alpha=0.5)
+    plt.plot(times, recordingsB['6;r'][:,0], label='CMRO2', alpha=0.5)
     plt.legend()
     plt.subplot(5,6,30)
     plt.title('BOLD')
@@ -400,16 +406,13 @@ def different_input_strengths():
 
         ### MEAN CBF OF ALL BOLD MONITORS
         for bold_monitor in [1,2,3,4,5,6]:
-            ## f_in of first BOLD monitors and CBF of last monitors
-            try:
-                y_values[input_factor_idx,2,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';f_in'],simParams)
-            except:
-                y_values[input_factor_idx,2,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';CBF'],simParams)
+            ## f_in of BOLD monitors
+            y_values[input_factor_idx,2,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';f_in'],simParams)
 
 
         ### MEAN CMRO2 OF LAST BOLD MONITORS
         for bold_monitor in [4,5,6]:
-            y_values[input_factor_idx,3,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';CMRO2'],simParams)
+            y_values[input_factor_idx,3,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';r'],simParams)
 
         
         ### MEAN BOLD OF ALL BOLD MONITORS
@@ -419,11 +422,8 @@ def different_input_strengths():
 
         ### MEAN I_CBF OF ALL BOLD MONITORS
         for bold_monitor in [1,2,3,4,5,6]:
-            ## f_in of first BOLD monitors and CBF of last monitors
-            try:
-                y_values[input_factor_idx,5,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';r'],simParams)
-            except:
-                y_values[input_factor_idx,5,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';I_CBF'],simParams)
+            ## I_CBF of BOLD monitors
+            y_values[input_factor_idx,5,bold_monitor-1] = get_population_average_of_last_10(recordingsB[str(bold_monitor)+';I_CBF'],simParams)
 
 
         ### MEAN I_CMRO2 OF LAST BOLD MONITORS
@@ -481,7 +481,7 @@ def different_input_strengths():
 
 
 
-def with_vs_without_normalization():
+def with_vs_without_normalization(num_sims=1):
     """
         load data of one pulse simulation
         demonstrate input+flow+BOLD for standard BOLD monitor with and without normalization
@@ -490,8 +490,24 @@ def with_vs_without_normalization():
     ### LOAD DATA
     load_string_pulse = '5_0_1'
     load_string_rest = '1_0_1'
-    recordingsB_pulse = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_pulse+'.npy', allow_pickle=True).item()
-    recordingsB_rest = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_rest+'.npy', allow_pickle=True).item()
+    
+    ## LOAD recordingsB num_sims TIMES AND AVERAGE THE RECORDINGS
+    recordingsB_pulse={}
+    recordingsB_rest={}
+    for sim_id in range(num_sims):
+        recordingsB_pulse_loaded = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_pulse+'__'+str(int(sim_id))+'.npy', allow_pickle=True).item()
+        recordingsB_rest_loaded = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string_rest+'__'+str(int(sim_id))+'.npy', allow_pickle=True).item()
+        for key,val in recordingsB_pulse_loaded.items():
+            try:
+                recordingsB_pulse[key]+=recordingsB_pulse_loaded[key]/num_sims
+            except:
+                recordingsB_pulse[key]=recordingsB_pulse_loaded[key]/num_sims
+        for key,val in recordingsB_rest_loaded.items():
+            try:
+                recordingsB_rest[key]+=recordingsB_rest_loaded[key]/num_sims
+            except:
+                recordingsB_rest[key]=recordingsB_rest_loaded[key]/num_sims
+    
     simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string_pulse+'.npy', allow_pickle=True).item()
 
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
@@ -509,7 +525,7 @@ def with_vs_without_normalization():
 
 
 
-def pulses_visualization():
+def pulses_visualization(num_sims=1):
     """
         load data of one pulse simulation
         visualize CBF/CMRO2 and BOLD of the different BOLD monitors with different source signals
@@ -518,16 +534,16 @@ def pulses_visualization():
     ### LOAD DATA
     load_string = '5_0_1'
     
-    ## LOAD recordingsB 20 TIMES AND AVERAGE THE RECORDINGS
+    ## LOAD recordingsB num_sims TIMES AND AVERAGE THE RECORDINGS
     recordingsB={}
-    for sim_id in range(20):
+    for sim_id in range(num_sims):
         recordingsB_loaded = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'__'+str(int(sim_id))+'.npy', allow_pickle=True).item()
         for key,val in recordingsB_loaded.items():
             try:
-                recordingsB[key]+=recordingsB_loaded[key]/20
+                recordingsB[key]+=recordingsB_loaded[key]/num_sims
             except:
-                recordingsB[key]=recordingsB_loaded[key]/20
-    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'.npy', allow_pickle=True).item()
+                recordingsB[key]=recordingsB_loaded[key]/num_sims
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'__0.npy', allow_pickle=True).item()
 
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
 
@@ -551,8 +567,8 @@ def pulses_visualization():
         if row<3:
             plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
         else:
-            plt.plot(times, recordingsB[str(row+1)+';CBF'][:,0],label='CBF', color='red')
-            plt.plot(times, recordingsB[str(row+1)+';CMRO2'][:,0],label='CMRO2', color='blue', ls='dashed')
+            plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
+            plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='blue', ls='dashed')
             if row==3: plt.legend()
         plt.ylim(0.8,1.65)
         plt.tight_layout(pad=10)
@@ -563,7 +579,7 @@ def pulses_visualization():
         plt.figure()
         plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
         plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
-        plt.ylim(-0.01,0.015)
+        plt.ylim(-0.015,0.015)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/BOLD_'+label+'.svg')
@@ -662,7 +678,10 @@ if __name__=='__main__':
     rate_dist_plot=0
     
     if overview_plot:
-        if len(sys.argv)==3:
+        if len(sys.argv)==4:
+            ## optional input_factor, stimulus and sim_id given
+            two_overview_plots(input_factor=float(sys.argv[1]), stimulus=int(sys.argv[2]), sim_id=str(int(sys.argv[3])))
+        elif len(sys.argv)==3:
             ## optional input_factor and stimulus given
             two_overview_plots(input_factor=float(sys.argv[1]), stimulus=int(sys.argv[2]))
         elif len(sys.argv)==2:
@@ -676,10 +695,10 @@ if __name__=='__main__':
         different_input_strengths()
 
     if with_vs_without_norm_plot:
-        with_vs_without_normalization()
+        with_vs_without_normalization(num_sims=20)
 
     if pulses_visu_plot:
-        pulses_visualization()
+        pulses_visualization(num_sims=20)
 
     if correlation_plot:
         BOLD_correlations()

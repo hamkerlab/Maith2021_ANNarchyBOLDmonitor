@@ -8,20 +8,18 @@ simParams   = np.load('../dataRaw/Fig_Balloon_model_data_simParams.npy', allow_p
 
 times=np.arange(simParams['dt'],simParams['sim_dur1']+simParams['sim_dur2']+simParams['sim_dur3']+simParams['dt'],simParams['dt'])
 
-ylim_dict={'f_in':    [1, 1.7],
-           'v':       [1, 1.7],
-           'f_out':   [1, 1.7],
-           'BOLD':    [1, 0.015],
-           'CBF':     [1, 1.7],
-           'CMRO2':   [1, 1.7],
-           'r':       [1, 0.23],
-           'I_CBF':   [1, 0.23],
-           'I_CMRO2': [1, 0.23],
-           'q':       [2, 0.75],
-           'E':       [2, 0.22],
-           's':       [2,-0.2],
-           'sCBF':    [2,-0.2],
-           'sCMRO2':  [2,-0.2]}
+ylim_dict={'f_in':     [1, 1.7],
+           'v':        [1, 1.7],
+           'f_out':    [1, 1.7],
+           'BOLD':     [1, 0.015],
+           'r':        [1, 1.7],
+           'I_CBF':    [1, 0.23],
+           'I_CMRO2':  [1, 0.23],
+           'q':        [2, 0.75],
+           'E':        [2, 0.22],
+           's':        [2,-0.2],
+           's_CBF':    [2,-0.2],
+           's_CMRO2':  [2,-0.2]}
 
 ### FIGURE
 for key in recordingsB.keys():
@@ -50,11 +48,11 @@ for key in recordingsB.keys():
 ### EXTRA FIGURE
 plt.figure(figsize=(16,9), dpi=500)
 plt.axhline(1, color='grey')
-plt.plot(times, recordingsB['2;CBF'], label='CBF')
-plt.plot(times, recordingsB['2;CMRO2'], label='CMRO2')
+plt.plot(times, recordingsB['2;f_in'], label='CBF')
+plt.plot(times, recordingsB['2;r'], label='CMRO2')
 ## AX LIMITS
 plt.xlim(times[0],times[-1])
-y100 = ylim_dict['CBF'][1]
+y100 = ylim_dict['f_in'][1]
 y20  = 1
 y0   = y20 + (y20 - y100) * (1/4.)
 plt.ylim(y0, y100)

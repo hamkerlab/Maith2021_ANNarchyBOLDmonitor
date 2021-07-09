@@ -37,10 +37,18 @@ elif params['optimizeRates']=='v2':
     ## just use some values for the parameters... they will be overwritten during optimization
     params['fittedParams']= {'S_INP':1, 'S_EI':1, 'S_IE':1, 'S_II':1}
 elif params['optimizeRates']=='v2post':
-    ## v2 --> weight scalings were fitted
-    params['useFit'] = 4
+    """
+        v2 --> weight scalings were fitted
+        1-10:  optimized for: params['numInputs'] = params['corE_popsize']//4 - 1
+        11-20: optimized for: params['numInputs'] = 10
+    """
+    
+    #for i in range(11,21):
+    #    print(i,np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(i)+'.npy', allow_pickle=True).item())
+    
+    params['useFit'] = 15#4
     params['fittedParams'] = np.load('../dataRaw/optimize_ratesv2_obtainedParams'+str(params['useFit'])+'.npy', allow_pickle=True).item()
-
+    print(params['fittedParams'])
 
 ### Neuron models
 ## conductance based synapses
@@ -99,7 +107,7 @@ params['weightDist'] = scaledANNarchyLogNormal
 if 'v1' in params['optimizeRates']:
     params['numInputs']  = params['fittedParams']['number synapses']
 elif 'v2' in params['optimizeRates']:
-    # if model v2 --> use max possible num-pre-fix for all projections
-    params['numInputs']  = params['corE_popsize']//4 - 1
+    # if model v2 --> use max possible num-pre-fix for all projections, or 10
+    params['numInputs']  = 10#params['corE_popsize']//4 - 1
 
 
