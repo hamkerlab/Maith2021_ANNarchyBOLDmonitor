@@ -112,12 +112,12 @@ def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
         plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='grey', ls='dashed')
         if row==3: plt.legend()
         if row==5: plt.xlabel('time / ms')
-    plt.ylim(0.8,1.65)
+    plt.ylim(0.8,1.75)
     ### RIGHT COLUMN
     plt.subplot(6,2,2*row+2)
     plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
     plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='pulse', color='k')
-    plt.ylim(-0.015,0.015)
+    plt.ylim(-0.0165,0.0165)
     if row==0: plt.title('BOLD')
     if row==5: plt.xlabel('time / ms')
 
@@ -525,14 +525,13 @@ def with_vs_without_normalization(num_sims=1):
 
 
 
-def pulses_visualization(num_sims=1):
+def pulses_visualization(num_sims=1, load_string = '5_0_1'):
     """
         load data of one pulse simulation
         visualize CBF/CMRO2 and BOLD of the different BOLD monitors with different source signals
     """
 
     ### LOAD DATA
-    load_string = '5_0_1'
     
     ## LOAD recordingsB num_sims TIMES AND AVERAGE THE RECORDINGS
     recordingsB={}
@@ -570,7 +569,7 @@ def pulses_visualization(num_sims=1):
             plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
             plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='blue', ls='dashed')
             if row==3: plt.legend()
-        plt.ylim(0.8,1.65)
+        plt.ylim(0.8,1.75)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/CBF_CMRO2_'+label+'.svg')
@@ -579,7 +578,7 @@ def pulses_visualization(num_sims=1):
         plt.figure()
         plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
         plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
-        plt.ylim(-0.015,0.015)
+        plt.ylim(-0.015,0.0165)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/BOLD_'+label+'.svg')
@@ -698,7 +697,7 @@ if __name__=='__main__':
         with_vs_without_normalization(num_sims=20)
 
     if pulses_visu_plot:
-        pulses_visualization(num_sims=20)
+        pulses_visualization(num_sims=20)#, load_string = '1_2_3'
 
     if correlation_plot:
         BOLD_correlations()

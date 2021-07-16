@@ -182,13 +182,16 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
     simParams['stimulus']=stimulus
     if stimulus==0:
         ## long input
-        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [5000,20000,0]#ms
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']= [5000,20000,0]#ms
     elif stimulus==1:
         ## short input pulse
-        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [10000,100,14900]#ms
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']= [10000,100,14900]#ms
     elif stimulus==2:
         ## long resting period where only BOLD is recorded
-        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']=sim_dur3 = [10*60*1000,0,0]#ms
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3']= [10*60*1000,0,0]#ms
+    elif stimulus==3:
+        ## long impulse
+        simParams['sim_dur1'], simParams['sim_dur2'], simParams['sim_dur3'] = [5000,20000,15000]#ms
     else:
         print('second argument, stimulus, has to be 0 or 1')
         quit()

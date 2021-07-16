@@ -42,7 +42,7 @@ Izhikevich2007RS = Neuron(
         du/dt      = a*(b*(v - v_r) - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f  = pos(I_ampa) + 1.5*neg(I_gaba)
+        var_f  = pos(I_ampa) - 1.5*neg(I_gaba)
         var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
         var_r  = pos(I_ampa) 
         var_ra = pos(I_ampa) 
@@ -87,7 +87,7 @@ Izhikevich2007FS = Neuron(
         du/dt      = a*(U_v - u) : init = 0
         
         tau_syn*dsyn/dt = -syn
-        var_f  = pos(I_ampa) + 1.5*neg(I_gaba)
+        var_f  = pos(I_ampa) - 1.5*neg(I_gaba)
         var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
         var_r  = pos(I_ampa)
         var_ra = r
