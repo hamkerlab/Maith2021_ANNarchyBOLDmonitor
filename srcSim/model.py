@@ -1,5 +1,5 @@
 from ANNarchy import *
-from model_neuronmodels import params, rng, Izhikevich2007RS, Izhikevich2007FS, InputNeuron, newBoldNeuron, InputPoissonNeuron, BoldNeuron_r
+from model_neuronmodels import params, rng, Izhikevich2007RS, Izhikevich2007FS, InputNeuron, balloon_two_inputs, InputPoissonNeuron, BoldModel_r
 from ANNarchy.extensions.bold import *
 
 ####################################################################################################################################

@@ -2,6 +2,11 @@ import numpy as np
 import pylab as plt
 from extras import set_size
 
+font = {'family' : 'Arial',
+        'weight' : 'normal',
+        'size'   : 8}
+plt.rc('font', **font)
+
 ### LOAD DATA
 recordingsB = np.load('../dataRaw/Fig_Balloon_model_data_recordingsB.npy', allow_pickle=True).item()
 simParams   = np.load('../dataRaw/Fig_Balloon_model_data_simParams.npy', allow_pickle=True).item()
@@ -11,7 +16,7 @@ times=np.arange(simParams['dt'],simParams['sim_dur1']+simParams['sim_dur2']+simP
 ylim_dict={'f_in':     [1, 1.7],
            'v':        [1, 1.7],
            'f_out':    [1, 1.7],
-           'BOLD':     [1, 0.015],
+           'BOLD':     [2, -0.015],
            'r':        [1, 1.7],
            'I_CBF':    [1, 0.23],
            'I_CMRO2':  [1, 0.23],
@@ -20,11 +25,25 @@ ylim_dict={'f_in':     [1, 1.7],
            's':        [2,-0.2],
            's_CBF':    [2,-0.2],
            's_CMRO2':  [2,-0.2]}
+           
+label_dict={'f_in':    '$f_{in}$ = CBF',
+           'v':        '$v$',
+           'f_out':    '$f_{out}$',
+           'BOLD':     'BOLD',
+           'r':        '$r$ = CMRO2',
+           'I_CBF':    '$I_{CBF}$',
+           'I_CMRO2':  '$I_{CMRO2}$',
+           'q':        '$q$ = Deoxy-Hb',
+           'E':        '$E$',
+           's':        '$s$',
+           's_CBF':    '$s_{CBF}$',
+           's_CMRO2':  '$s_{CMRO2}$'}
 
 ### FIGURE
 for key in recordingsB.keys():
     plt.figure(dpi=500)
-    plt.axhline(recordingsB[key][0,0], color='grey')
+    plt.axhline(recordingsB[key][0,0], color='grey', ls='dashed')
+    plt.gca().set_facecolor((0.95,0.95,0.96))
     plt.plot(times, recordingsB[key][:,0], color='k')
     plt.xlim(times[0],times[-1])
     if ylim_dict[key.split(';')[1]][0] == 1:
@@ -42,6 +61,7 @@ for key in recordingsB.keys():
     plt.title(key)
     plt.subplots_adjust(left=0.3, top=0.7)
     set_size(2.03/2.54,1.35/2.54)
+    plt.text(0.97, 0.97, label_dict[key.split(';')[1]], ha='right', va='top', transform=plt.gca().transAxes)
     plt.savefig('../results/Fig_Balloon_model_data/'+key.replace(';','_')+'.svg')
     
 

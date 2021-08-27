@@ -8,6 +8,7 @@ from extras import set_size, get_pop_rate
 font = {'family' : 'Arial',
         'weight' : 'normal',
         'size'   : 8}
+bold_font = {'family' : 'Arial', 'weight' : 'bold', 'size'   : 8}
 
 plt.rc('font', **font)
 
@@ -66,37 +67,38 @@ def normalization_plot_column(title, mon_name, col, times, recordingsB_pulse, re
     """
         plots one column of the with vs without normalization plot
     """
+    
     ### FIRST ROW
     ax=plt.subplot(3,2,col+1)
-    plt.title(title)
-    plt.plot(times, recordingsB_rest[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='black', label='resting')
-    plt.plot(times, recordingsB_pulse[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='red', ls='dashed', label='pulse')
+    plt.title(title, **bold_font)
+    plt.plot(times/1000, recordingsB_pulse[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='red', label='pulse')
+    plt.plot(times/1000, recordingsB_rest[mon_name+';I_CBF'][:,0]/np.max(recordingsB_pulse[mon_name+';I_CBF'][:,0]), color='black', ls='dashed', label='resting')
     plt.ylim(-0.3,1.05)
     ax.set_xticklabels([])
     if col==0: plt.ylabel('I')
     if col==1: ax.set_yticklabels([])
     ### SECOND ROW
     ax=plt.subplot(3,2,col+3)
-    plt.plot(times, recordingsB_rest[mon_name+';f_in'][:,0], color='black')
-    plt.plot(times, recordingsB_pulse[mon_name+';f_in'][:,0], color='red', ls='dashed')
+    plt.plot(times/1000, recordingsB_pulse[mon_name+';f_in'][:,0], color='red')
+    plt.plot(times/1000, recordingsB_rest[mon_name+';f_in'][:,0], color='black', ls='dashed')
     plt.ylim(0.9,1.35)
     ax.set_xticklabels([])
-    if col==0: plt.ylabel('CBF')
+    if col==0: plt.ylabel('CBF', **bold_font)
     if col==1:
         ax.set_yticklabels([])
     ### THIRD ROW
     ax=plt.subplot(3,2,col+5)
-    plt.plot(times, recordingsB_rest[mon_name+';BOLD'][:,0]*100, color='black', label='resting')
-    plt.plot(times, recordingsB_pulse[mon_name+';BOLD'][:,0]*100, color='red', label='pulse', ls='dashed')
+    plt.plot(times/1000, recordingsB_pulse[mon_name+';BOLD'][:,0]*100, color='red', label='pulse')
+    plt.plot(times/1000, recordingsB_rest[mon_name+';BOLD'][:,0]*100, color='black', label='resting', ls='dashed')
     plt.ylim(-0.5, 1.0)
-    plt.xlabel('time [ms]')
+    plt.xlabel('time [s]', **bold_font)
     if col==0:
-        plt.ylabel('BOLD [%]')
+        plt.ylabel('BOLD [%]', **bold_font)
         plt.legend()
     if col==1:
         ax.set_yticklabels([])
 
-def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
+def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams, CBF_CMRO2_limits, BOLD_limits):
     """
         plots one row of the pulses visualization plot
     """
@@ -112,12 +114,12 @@ def pulses_visualization_plot_row(row, ylabel, recordingsB, times, simParams):
         plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='grey', ls='dashed')
         if row==3: plt.legend()
         if row==5: plt.xlabel('time / ms')
-    plt.ylim(0.8,1.75)
+    plt.ylim(CBF_CMRO2_limits[0]+0.05*(CBF_CMRO2_limits[0]-CBF_CMRO2_limits[1]),CBF_CMRO2_limits[1]+0.05*(CBF_CMRO2_limits[1]-CBF_CMRO2_limits[0]))
     ### RIGHT COLUMN
     plt.subplot(6,2,2*row+2)
     plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
     plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='pulse', color='k')
-    plt.ylim(-0.0165,0.0165)
+    plt.ylim(-np.max(np.abs(np.array(BOLD_limits)))*1.05,np.max(np.abs(np.array(BOLD_limits)))*1.05)
     if row==0: plt.title('BOLD')
     if row==5: plt.xlabel('time / ms')
 
@@ -167,6 +169,19 @@ def lognormalPDF(x, mu=-0.702, sigma=0.9355, shift=0):
     else:
         return np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2)) / (x * sigma * np.sqrt(2 * np.pi))
     
+def get_limits(recordings, label_list):
+    """
+        recordings: dictionarry with data vectors
+        label_list: keys from qhich max and min should be obtained
+    """
+    min_lim=np.inf
+    max_lim=-np.inf
+    for label in label_list:
+        for key in recordings.keys():
+            if key.split(';')[1]==label:
+                min_lim = np.min([min_lim, recordings[key].min()])
+                max_lim = np.max([max_lim, recordings[key].max()])
+    return [min_lim, max_lim]
         
 
 
@@ -507,9 +522,8 @@ def with_vs_without_normalization(num_sims=1):
                 recordingsB_rest[key]+=recordingsB_rest_loaded[key]/num_sims
             except:
                 recordingsB_rest[key]=recordingsB_rest_loaded[key]/num_sims
-    
-    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string_pulse+'.npy', allow_pickle=True).item()
 
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string_pulse+'.npy', allow_pickle=True).item()
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
 
     ### PLOT
@@ -527,7 +541,7 @@ def with_vs_without_normalization(num_sims=1):
 
 def pulses_visualization(num_sims=1, load_string = '5_0_1'):
     """
-        load data of one pulse simulation
+        load data of num_sims pulse simulations
         visualize CBF/CMRO2 and BOLD of the different BOLD monitors with different source signals
     """
 
@@ -545,13 +559,15 @@ def pulses_visualization(num_sims=1, load_string = '5_0_1'):
     simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'__0.npy', allow_pickle=True).item()
 
     times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
-
+    
+    CBF_CMRO2_limits = get_limits(recordingsB, ['f_in', 'r'])
+    BOLD_limits = get_limits(recordingsB, ['BOLD'])
 
     ### PLOT WITH ALL DATA
     plt.figure(figsize=(10,12),dpi=500)
 
     for row, label in enumerate(['A','B','C','D','E','F']):
-        pulses_visualization_plot_row(row, label, recordingsB, times, simParams)
+        pulses_visualization_plot_row(row, label, recordingsB, times, simParams, CBF_CMRO2_limits, BOLD_limits)
 
     plt.tight_layout()
     plt.savefig('../results/BOLDfromDifferentSources/BOLDfromDifferentSources_ANA_pulses_visualization.png', dpi=500)
@@ -562,26 +578,89 @@ def pulses_visualization(num_sims=1, load_string = '5_0_1'):
     
         ### CBF/CMRO2 PLOTS
         plt.figure()
-        plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
+        plt.axvspan((simParams['rampUp']+simParams['sim_dur1'])/1000,(simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'])/1000, color='k', alpha=0.3)
         if row<3:
-            plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
+            plt.plot(times/1000, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
         else:
-            plt.plot(times, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
-            plt.plot(times, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='blue', ls='dashed')
+            plt.plot(times/1000, recordingsB[str(row+1)+';f_in'][:,0],label='CBF', color='red')
+            plt.plot(times/1000, recordingsB[str(row+1)+';r'][:,0],label='CMRO2', color='blue', ls='dashed')
             if row==3: plt.legend()
-        plt.ylim(0.8,1.75)
+        plt.ylim(CBF_CMRO2_limits[0]+0.05*(CBF_CMRO2_limits[0]-CBF_CMRO2_limits[1]),CBF_CMRO2_limits[1]+0.05*(CBF_CMRO2_limits[1]-CBF_CMRO2_limits[0]))
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/CBF_CMRO2_'+label+'.svg')
         
         ### BOLD PLOTS
         plt.figure()
-        plt.axvspan(simParams['rampUp']+simParams['sim_dur1'],simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'], color='k', alpha=0.3)
-        plt.plot(times, recordingsB[str(row+1)+';BOLD'][:,0],label='BOLD', color='k')
-        plt.ylim(-0.015,0.0165)
+        plt.axvspan((simParams['rampUp']+simParams['sim_dur1'])/1000,(simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'])/1000, color='k', alpha=0.3)
+        plt.plot(times/1000, recordingsB[str(row+1)+';BOLD'][:,0]*100,label='BOLD', color='k')
+        plt.ylim(-np.max(np.abs(np.array(BOLD_limits)))*1.05*100,np.max(np.abs(np.array(BOLD_limits)))*1.05*100)
         plt.tight_layout(pad=10)
         set_size(4.89/2.54,2.08/2.54)
         plt.savefig('../results/BOLDfromDifferentSources/pulses_visu/BOLD_'+label+'.svg')
+        
+        
+        
+def make_sustained_input_plot(num_sims=20, load_string = '1_2_3'):
+    """
+        load data of num_sims sustained input simulations
+        create data plots for two figures, one without monitor E and one only with monitors E and D (because E and D are almost identical)
+        visualize CBF/CMRO2 and BOLD of the different BOLD monitors with different source signals
+    """
+
+    ### LOAD DATA
+    
+    ## LOAD recordingsB num_sims TIMES AND AVERAGE THE RECORDINGS
+    recordingsB={}
+    for sim_id in range(num_sims):
+        recordingsB_loaded = np.load('../dataRaw/simulations_BOLDfromDifferentSources_recordingsB_'+load_string+'__'+str(int(sim_id))+'.npy', allow_pickle=True).item()
+        for key,val in recordingsB_loaded.items():
+            try:
+                recordingsB[key]+=recordingsB_loaded[key]/num_sims
+            except:
+                recordingsB[key]=recordingsB_loaded[key]/num_sims
+    simParams   = np.load('../dataRaw/simulations_BOLDfromDifferentSources_simParams_'+load_string+'__0.npy', allow_pickle=True).item()
+
+    times=np.arange(simParams['rampUp']+simParams['dt'],simParams['rampUp']+simParams['sim_dur']+simParams['dt'],simParams['dt'])
+    
+    CBF_CMRO2_limits = get_limits(recordingsB, ['f_in', 'r'])
+    BOLD_limits = get_limits(recordingsB, ['BOLD'])
+
+    ### CBF/CMRO2 and BOLD plots for four different conditions, monitors ABC together in single plots (=1st condition)
+    linestyle_list=['solid', (0,(1,1)), (0,(3,1,1,1))]
+    monitor_idx_dict = {'D':4, 'E':5, 'F':6}
+    for idx, label in enumerate(['ABC','D','E','F']):
+        ### CBF/CMRO2 PLOTS
+        plt.figure()
+        plt.axvspan((simParams['rampUp']+simParams['sim_dur1'])/1000,(simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'])/1000, color='k', alpha=0.3)
+        if label=='ABC':
+            for monitor_idx, monitor_name in enumerate(['A','B','C']):
+                plt.plot(times/1000, recordingsB[str(monitor_idx+1)+';f_in'][:,0],label=monitor_name, color='red', ls=linestyle_list[monitor_idx])
+            plt.legend()
+        else:
+            plt.plot(times/1000, recordingsB[str(monitor_idx_dict[label])+';f_in'][:,0],label='CBF', color='red')
+            plt.plot(times/1000, recordingsB[str(monitor_idx_dict[label])+';r'][:,0],label='CMRO2', color='blue', ls='dashed')
+            if label=='D': plt.legend()
+        plt.ylim(CBF_CMRO2_limits[0]+0.05*(CBF_CMRO2_limits[0]-CBF_CMRO2_limits[1]),CBF_CMRO2_limits[1]+0.05*(CBF_CMRO2_limits[1]-CBF_CMRO2_limits[0]))
+        plt.tight_layout(pad=10)
+        set_size(4.89/2.54,2.08/2.54)
+        plt.savefig('../results/BOLDfromDifferentSources/sustained_inputs/CBF_CMRO2_'+label+'.svg')
+        
+        ### BOLD PLOTS
+        plt.figure()
+        plt.axvspan((simParams['rampUp']+simParams['sim_dur1'])/1000,(simParams['rampUp']+simParams['sim_dur1']+simParams['sim_dur2'])/1000, color='k', alpha=0.3)
+        if label=='ABC':
+            for monitor_idx, monitor_name in enumerate(['A','B','C']):
+                plt.plot(times/1000, recordingsB[str(monitor_idx+1)+';BOLD'][:,0]*100,label=monitor_name, color='k', ls=linestyle_list[monitor_idx])
+            plt.legend()
+        else:
+            plt.plot(times/1000, recordingsB[str(monitor_idx_dict[label])+';BOLD'][:,0]*100,label='BOLD', color='k')
+        plt.ylim(-np.max(np.abs(np.array(BOLD_limits)))*1.05*100,np.max(np.abs(np.array(BOLD_limits)))*1.05*100)
+        plt.tight_layout(pad=10)
+        set_size(4.89/2.54,2.08/2.54)
+        plt.savefig('../results/BOLDfromDifferentSources/sustained_inputs/BOLD_'+label+'.svg')
+    
+
 
 
 
@@ -671,10 +750,11 @@ if __name__=='__main__':
 
     overview_plot=0
     different_input_strengths_plot=0
-    with_vs_without_norm_plot=0
+    with_vs_without_norm_plot=1
     pulses_visu_plot=1
     correlation_plot=0
     rate_dist_plot=0
+    sustained_input_plot=1
     
     if overview_plot:
         if len(sys.argv)==4:
@@ -689,21 +769,31 @@ if __name__=='__main__':
         else:
             ## standard simulation arguments used
             two_overview_plots()
+        print('overview_plot done')
             
     if different_input_strengths_plot:
         different_input_strengths()
+        print('different_input_strengths done')
 
     if with_vs_without_norm_plot:
-        with_vs_without_normalization(num_sims=20)
+        with_vs_without_normalization(num_sims=40)
+        print('with_vs_without_normalization done')
 
     if pulses_visu_plot:
-        pulses_visualization(num_sims=20)#, load_string = '1_2_3'
+        pulses_visualization(num_sims=40)#, load_string = '1_2_3'
+        print('pulses_visualization done')
 
     if correlation_plot:
         BOLD_correlations()
+        print('BOLD_correlations done')
         
     if rate_dist_plot:
         rate_distribution()
+        print('rate_distribution done')
+        
+    if sustained_input_plot:
+        make_sustained_input_plot(num_sims=40)
+        print('make_sustained_input_plot done')
 
 
 

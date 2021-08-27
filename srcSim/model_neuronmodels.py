@@ -1,5 +1,6 @@
 from ANNarchy import *
-from ANNarchy.extensions.bold.BoldModels import BoldNeuron_new as newBoldNeuron
+from ANNarchy.extensions.bold.PredefinedModels import balloon_two_inputs
+from ANNarchy.extensions.bold import BoldModel
 from parameters import params, rng
 
 setup(dt=params['dt'])
@@ -43,9 +44,9 @@ Izhikevich2007RS = Neuron(
         
         tau_syn*dsyn/dt = -syn
         var_f  = pos(I_ampa) - 1.5*neg(I_gaba)
-        var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
         var_r  = pos(I_ampa) 
         var_ra = pos(I_ampa) 
+        var_rb = pos(I_ampa)**(1/3.)
     """,
     spike = "v >= v_peak",
     reset = """
@@ -88,9 +89,9 @@ Izhikevich2007FS = Neuron(
         
         tau_syn*dsyn/dt = -syn
         var_f  = pos(I_ampa) - 1.5*neg(I_gaba)
-        var_fa  = pos(I_ampa) + 1.5*neg(I_gaba)**2
         var_r  = pos(I_ampa)
         var_ra = r
+        var_rb  = pos(I_ampa)**(1/3.)
     """,
     spike = "v >= v_peak",
     reset = """
@@ -137,8 +138,8 @@ InputPoissonNeuron = Neuron(
     extra_values=params
 )
 
-### BOLD neuron only for single input recording
-BoldNeuron_r = Neuron(
+### BOLD model only for single input recording
+BoldModel_r = BoldModel(
 parameters = """
 """,
 equations = """
