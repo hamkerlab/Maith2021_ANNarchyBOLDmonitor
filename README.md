@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/368138221.svg)](https://zenodo.org/badge/latestdoi/368138221)
 
-Source code of simulations and analyses from Maith, Ülo Dinkelbach, Baladron, Vitay & Hamker (2021), *Frontiers in Neuroinformatics*.
+Source code of simulations and analyses from Maith, Dinkelbach, Baladron, Vitay & Hamker (2021), *Frontiers in Neuroinformatics*.
 
 ## Authors:
 
