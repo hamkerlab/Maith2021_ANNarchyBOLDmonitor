@@ -1,31 +1,102 @@
-srcSim/:
-    extras.py:
-        - functions which are used globally
-    parameters.py:
-        - parameters which are used globally
-    model_neuronmodels.py:
-        - defintion of RS and FS cortical neuron models
-    model.py:
-        - defintion of model (populations, projections)
-    get_weightDist.py:
-        - generate 1000 RS and FS cortical neurons
-        - send 1 input spike
-        - compares (Figures) distribution of caused PSPs in neurons with distribution of EPSPs from Song et al. (2005)
-        - the weight distributions should adjusted manually to obtain a got fit (visual comparison) betwenn simulated and experimetnal distributions
-    optimize_rates.py:
-        - two modes, optimize and test
-        - optimize mode:
-            - optimizes parameters (input current distribution and number of afferent synapses of all neurons)
-            - goodness of fit: simulated mean firing rate distribution vs. distribution similar to the firing rate distributions shown in Buzsáki & Mizuseki, (2014)
-            - saves fitted parameters and loss
-        - test mode:
-            - load fitted params and prints loss
-            - simulator optionally generates plots to also visually compare firing rate distributions
-        - possible improvements:
-            - connect with probabilities (part of the input pop) instead of fixed ammount (not more than 49 possible becasue of CorI size)
-            - or larger pop sizes
-            - calculate the loss over multiple initializations (average over randomness)
-    run_parallel.sh:
-        - shell script to run python files
-    test.py:
-        - python file for testing anything
+# BOLDpaper2021
+
+Source code of simulations and analyses from Maith, Ülo Dinkelbach, Baladron, Vitay & Hamker (2021), *Frontiers in Neuroinformatics*.
+
+## Authors:
+
+* Oliver Maith (oliver.maith@informatik.tu-chemnitz.de)
+* Helge Ülo Dinkelbach (helge.dinkelbach@gmail.com)
+
+## Using the Scripts
+
+### Files
+
+- **dataRaw**/
+  - folder for generated data
+- **results**/
+  - folder structure for generated results 
+- **srcAna**/
+  - *BOLDfromDifferentSources_ANA.py*
+    - main analysis script, analyze data generated with `BOLDfromDifferentSources` in **srcSim**/*simulations.py*
+    - loads data from **dataRaw**/, creates plots etc., saves results in **results**/BOLDfromDifferentSources/
+    - in `'__main__'`, define which plots are created
+  - *Fig_Balloon_model_data_ANA.py*
+    - analyze data generated with **srcSim**/*Fig_Balloon_model_data.py*
+    - loads data from **dataRaw**/, saves results in **results**/Fig_Balloon_model_data/
+  - *extras.py*
+    - some extra functions available for importing
+  - *initialTestofBOLD_ANA.py*
+    - analyze data generated with `initialTestofBOLD` in **srcSim**/*simulations.py*
+  - *test.py*
+    - just placeholder for any testing
+- **srcSim**/
+  - *Fig_Balloon_model_data.py*
+    - BOLD monitoring using a self-defined source signal (rectangular pulse)
+  - *extras.py*
+    - some extra functions available for importing
+  - *get_weightDist.py*
+    - for adjusting the weight distributions manually to obtain a good fit (visual comparison) between simulated and experimental distributions of post-synaptic potentials
+    - generate 1000 RS and FS cortical neurons
+    - send 1 input spike
+    - compares (Figures) distribution of caused EPSPs in neurons with distribution of EPSPs from Song et al. (2005)
+  - *model.py*
+    - defintion of model (populations, projections)
+    - different model versions (defined by `params['optimizeRates']` in **srcSim**/*parameters.py*)
+      - `'v1'`: used during optimization, model input = membrane currents, variable number of synapses for projections, self-defined input current distribution
+      - `'v1post'`: version `'v1'` but used after optimization (optimized parameters loaded)
+      - `'v2'`: used during optimization, model input = Poisson neurons, fixed number of synapses for projections, scaled projection strengthes
+      - `'v2post'`: version `'v2'` but used after optimization (optimized parameters loaded), version used to generate results of the work
+  - *model_neuronmodels.py*
+    - defintion of neuron models and additional BOLD models
+  - *optimize_rates.py*
+    - two modes, optimize and test (script arguments)
+    - works with model version `'v1'`
+    - optimize mode:
+        - optimizes parameters (input current distribution and number of afferent synapses of all neurons)
+        - goodness of fit: simulated mean firing rate distribution vs. distribution similar to the firing rate distributions shown in Buzsáki & Mizuseki (2014)
+        - saves fitted parameters and loss
+    - test mode:
+        - load fitted params and prints loss
+        - simulator optionally generates plots to also visually compare firing rate distributions
+  - *optimize_ratesv2.py*
+    - improved version of *optimize_rates.py*
+    - works with model version `'v2'`
+    - here scaling factors of the projection strengthes are optimized
+  - *parameters.py*
+    - parameters which are used globally
+  - *run_parallel.sh*
+    - shell script for running python files
+  - *simulations.py*
+    - main simulation script
+    - runs simulations with the cortical model and records signals of various BOLD monitors
+    - data saved in **dataRaw**/
+    - during simulation input is increased depending on the script arguments
+      - argument 1, `input_factor`: defines how strong the increase of the firing rate of the input Poisson neurons is
+      - argument 2, `stimulus`: defines length of simulation and timing of stimulus increase
+      - argument 3, `simID`: simply a simulation ID for saving the data
+  - *test.py*
+    - python file for testing anything
+  - *test2.py*
+    - python file for testing anything
+
+### Results Pipelines
+
+Description of the results generated in Python. For several figures, additional image processing software was used to create the final figures.
+
+Result | analysis | simulation | comment
+-|-|-|-
+Figure 1 | *Fig_Balloon_model_data_ANA.py* | *Fig_Balloon_model_data.py* | lineplots are generated individually in folder **results**/Fig_Balloon_model_data/
+Figure 3 |   | *BOLD_fig3.py* | plot is directly generated by the simulation script *BOLD_fig3.py*
+Figure 4 | *BOLDfromDifferentSources_ANA.py* (function `rate_distribution`) | *simulations.py* (standard arguments), *get_weightDist.py* | two plots are generated, weight distribution plot is directly generated by the simulation script *get_weightDist.py*
+Figure 5 | *BOLDfromDifferentSources_ANA.py* (function `with_vs_without_normalization`) | *simulations.py X 1 Y* | X = `input_factor` = 1--resting, 5--pulse; Y = `simID` = (0--39)
+Figure 6 | *BOLDfromDifferntSources_ANA.py* (function `pulses_visualization`) | *simulations.py 5 1 Y* | Y = `simID` = (0--39), lineplots are generated individually
+Figure 7 | *BOLDfromDifferntSources_ANA.py* (function `make_sustained_input_plot`) | *simulations.py 1.2 3 Y* | Y = `simID` = (0--39), lineplots are generated individually
+Figure S1 | *BOLDfromDifferntSources_ANA.py* (function `make_sustained_input_plot`) | *simulations.py 1.2 3 Y* | Y = `simID` = (0--39), Figure 7 and S1 are generated together, lineplots are generated individually
+
+# Platforms
+
+* GNU/Linux
+
+# Dependencies
+
+* ANNarchy >= 4.7
