@@ -748,13 +748,13 @@ def rate_distribution():
 
 if __name__=='__main__':
 
-    overview_plot=0
+    overview_plot=1
     different_input_strengths_plot=0
-    with_vs_without_norm_plot=1
-    pulses_visu_plot=1
+    with_vs_without_norm_plot=0
+    pulses_visu_plot=0
     correlation_plot=0
     rate_dist_plot=0
-    sustained_input_plot=1
+    sustained_input_plot=0
     
     if overview_plot:
         if len(sys.argv)==4:

@@ -143,8 +143,9 @@ BoldModel_r = BoldModel(
 parameters = """
 """,
 equations = """
-    r             = sum(exc)                                                    : init=0
-    I_CBF         = sum(I_f)                                                    : init=0
-    I_CMRO2       = sum(I_r)                                                    : init=0
-"""
+    I_CBF         = sum(I_CBF)    : init=0
+    I_CMRO2       = sum(I_CMRO2)  : init=0
+""",
+inputs=['I_CBF','I_CMRO2'],
+output="I_CBF",
 )

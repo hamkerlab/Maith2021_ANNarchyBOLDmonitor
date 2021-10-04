@@ -42,46 +42,43 @@ def initialTestofBOLD():
     monB={}
     ### STANDARD BOLDMONITOR WITHOUT ANY OPTIONALS --> JUST DEFINE POPULATIONS AND INPUT VARIABLE
     monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
-                            source_variables="syn")
+                            mapping={'I_CBF':'syn'})
                                 
     ### ALSO RECORD INPUT (r) OF BOLDNEURON
     monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF"])
                             
     ### SCALE THE POPULATION SIGNALS EQUALLY
     monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             scale_factor=[1,1],
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF"])
                             
     ### NORMALIZE THE POPULATION SIGNALS WITH BASELINE OVER 2000 ms
     monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[10000,10000],
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF", "f_in"])
                             
     ### USE SELF DEFINED POPULATION SIGNALS (source_variables + BOLD_MODEL (input_variables + bold_model)
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[10000,10000],
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### SELF-DEFINED ONLY corE WITHOUT NORMALIZATION
     monB['6'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
     ### SELF-DEFINED ONLY corI WITHOUT NORMALIZATION
     monB['7'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
@@ -89,8 +86,7 @@ def initialTestofBOLD():
     monB['8'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
                             normalize_input=10000,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     
@@ -98,21 +94,20 @@ def initialTestofBOLD():
     monB['9'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
                             normalize_input=10000,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
                                 
     ### Standard only corE
     monB['10'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF"])
                                 
     ### Standard only corI
     monB['11'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF"])
 
     ### GENERATE monDict for BOLDMonitors, to easier start and get the monitors
@@ -239,35 +234,35 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
     ### BOLD monitor which uses single input: all syn input
     monB['1'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables="syn",
+                            mapping={'I_CBF':'syn'},
                             recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['1withoutNorm'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
-                                       source_variables="syn",
+                                       mapping={'I_CBF':'syn'},
                                        recorded_variables=["BOLD", "I_CBF", "f_in"])
     monB['1Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
-                                source_variables="syn",
+                                mapping={'I_CBF':'syn'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
     monB['1Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
-                                source_variables="syn",
+                                mapping={'I_CBF':'syn'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
                             
     ### single input: excitatory syn input
     monB['2'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables="g_ampa",
+                            mapping={'I_CBF':'g_ampa'},
                             recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['2Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
-                                source_variables="g_ampa",
+                                mapping={'I_CBF':'g_ampa'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
     monB['2Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
-                                source_variables="g_ampa",
+                                mapping={'I_CBF':'g_ampa'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
     
@@ -278,76 +273,67 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID=''):
 
     monB['3'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables="r",
+                            mapping={'I_CBF':'r'},
                             recorded_variables=["BOLD", "I_CBF", "f_in", "E", "q", "v", "f_out"])
     monB['3Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                                 scale_factor=1,
-                                source_variables="r",
+                                mapping={'I_CBF':'r'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
     monB['3Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                                 scale_factor=1,
-                                source_variables="r",
+                                mapping={'I_CBF':'r'},
                                 bold_model=BoldModel_r,
                                 recorded_variables=["I_CBF"])
     
     ### two inputs: Buxton (2012, 2014, 2021), excitatory --> CMRO2&CBF, inhibitory --> CBF, use post-synaptic currents as driving signals (they likely cause metabolism)
     monB['4'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['4Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     monB['4Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_r"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_r'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     
     ### two inputs: Buxton + Howarth et al. (2021), in interneurons firing rate drives CMRO2
     monB['5'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables=["var_f","var_ra"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_ra'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['5Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_ra"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_ra'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     monB['5Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_ra"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_ra'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     
     ### two inputs: Buxton, but flow is quadratic
     monB['6'] = BoldMonitor(populations=[get_population('corEL1'), get_population('corIL1')],
                             normalize_input=[simParams['BOLDbaseline'],simParams['BOLDbaseline']],
-                            source_variables=["var_f","var_rb"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_rb'},
                             bold_model=balloon_two_inputs,
                             recorded_variables=["I_CBF","I_CMRO2","f_in","r","BOLD"])
     monB['6Eraw'] = BoldMonitor(populations=get_population('corEL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_rb"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_rb'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
     monB['6Iraw'] = BoldMonitor(populations=get_population('corIL1'),
                             scale_factor=1,
-                            source_variables=["var_f","var_rb"],
-                            input_variables=["I_f","I_r"],
+                            mapping={'I_CBF':'var_f', 'I_CMRO2':'var_rb'},
                             bold_model=BoldModel_r,
                             recorded_variables=["I_CBF","I_CMRO2"])
 
