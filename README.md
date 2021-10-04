@@ -1,4 +1,4 @@
-# BOLDpaper2021
+# Maith2021_ANNarchyBOLDmonitor
 
 [![DOI](https://zenodo.org/badge/368138221.svg)](https://zenodo.org/badge/latestdoi/368138221)
 
