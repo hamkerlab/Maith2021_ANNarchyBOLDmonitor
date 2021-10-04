@@ -30,11 +30,10 @@ mon_pop0 = Monitor(pop0, ["r"], start=False)
 mon_pop1 = Monitor(pop1, ["r"], start=False)
 m_bold = BoldMonitor(
     populations=[pop0, pop1],               # recorded populations
-    source_variables="r",                   # mean firing rate as input
-    input_variables="exc",
+    mapping={"I_CBF":"r"},                  # mean-firing rate as input
     normalize_input=[2000, 2000],           # time window to compute baseline
                                             # should be multiple of fr-window
-    recorded_variables=["sum(exc)", "BOLD"] # we want to analyze the BOLD input
+    recorded_variables=["I_CBF", "BOLD"] # we want to analyze the BOLD input
 )
 
 # Compile and initialize the network
@@ -86,9 +85,9 @@ ax1.vlines(10000, ymin, ymax, color='gray', linestyle='--')
 # b) BOLD input signal
 ax2 = subplot(grid[0, 1])
 
-bold_data = m_bold.get("sum(exc)")
+bold_data = m_bold.get("I_CBF")
 ax2.plot(bold_data, color="k")
-ax2.set_ylabel("BOLD input 'exc'", fontweight="bold")
+ax2.set_ylabel("BOLD input 'I_CBF'", fontweight="bold")
 ax2.text(-8000, 0.97, "B", fontweight="bold", fontsize=16)
 ax2.set_xticks(np.arange(0,21,2)*1000)
 ax2.set_xticklabels(np.arange(0,21,2))
