@@ -82,8 +82,9 @@ params['FS_v_peak'] = 25
 params['input_tau'] = 10000#how many miliseconds to increase input current by the value offset
 
 
-### Populations
-params['corE_popsize'] = 200
+### Population
+params['corE_popsize_default'] = 200
+params['corE_popsize'] = 2000
 if params['input']=='Current' and ('v1' in params['optimizeRates']):
     # input current distribution
     params['inputPop_init_offsetVal'] = generateInputs(params['fittedParams']['shift'],params['fittedParams']['mean'],params['fittedParams']['sigma'],params['corE_popsize'],rng)['values']
