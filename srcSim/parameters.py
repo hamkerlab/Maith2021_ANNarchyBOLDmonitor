@@ -16,6 +16,7 @@ else:
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
+params['measure_time'] = False
 params['optimizeRates'] = ['v1','v1post','v2','v2post'][3]# v1 = optimized input current distribution and number-pre-fix, v2 = optimize weight scalings, post = not fitting but use fitted values
 params['increasingInputs'] = False
 

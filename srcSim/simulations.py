@@ -418,6 +418,9 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID='', monitoring=
     ## BOLD monitors
     startMonitors(monDictB,monB)
 
+    ## Start performance measurement (if requested)
+    if params["measure_time"]:
+        t1 = time.time()
 
     ### ACTUAL SIMULATION
     simulate(simParams['sim_dur1'])
@@ -428,6 +431,17 @@ def BOLDfromDifferentSources(input_factor=1.0, stimulus=0, simID='', monitoring=
     get_population('inputPop').offsetVal = params['inputPop_init_offsetVal']
     simulate(simParams['sim_dur3'])
 
+    ## Stop performance measurement (if requested)
+    if params["measure_time"]:
+        t2 = time.time()
+        if monitoring==1:
+            with open("../perfRaw/without_monitor_"+str(params['corE_popsize'])+"_"+str(params['numInputs'])+"_"+str(params['num_threads'])+"threads.csv", "a") as file:
+                file.write(str(t2-t1)+"\n")
+        elif monitoring==2:
+            with open("../perfRaw/with_monitor_"+str(params['corE_popsize'])+"_"+str(params['numInputs'])+"_"+str(params['num_threads'])+"threads.csv", "a") as file:
+                file.write(str(t2-t1)+"\n")
+        else:
+            pass
 
     ### GET MONITORS
 
