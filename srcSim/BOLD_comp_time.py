@@ -29,8 +29,8 @@ params['corE_popsize'] = ... (line 88)
 neuron_number = [200, 400, 800, 1600, 3200, 6400, 12800, 25600]
 # this is set by params['numInputs']
 number_of_inputs = 10
-# 
-labels = [2*x for x in neuron_number]
+# number of recorded neurons depends on the size of corE
+labels = [ (x + 0.25*x) for x in neuron_number]
 
 #
 # Load the data from ../perfRaw (see the comments above how to create)
@@ -60,12 +60,15 @@ from matplotlib.pylab import *
 cm = 1/2.54  # centimeters to inches
 rcParams['font.size'] = 8
 
-fig, ax1 = plt.subplots(1,1,figsize=(20*cm,9*cm), dpi=300)
-plt.subplots_adjust(top=0.97, bottom=0.2, left=0.08, right=0.93)
+fig, ax1 = plt.subplots(1,1,figsize=(17*cm,9*cm), dpi=300)
+plt.subplots_adjust(top=0.97, bottom=0.2, left=0.1, right=0.92)
 ax2 = ax1.twinx() 
 
-ax1.errorbar(numpy.arange(len(neuron_number)), w_bold_mean, yerr=w_bold_std, label="with BOLD recording")
-ax1.errorbar(numpy.arange(len(neuron_number)), wo_bold_mean, yerr=wo_bold_std, label="without BOLD recording")
+ax1.plot(numpy.arange(len(neuron_number)), w_bold_mean, label="with BOLD recording")
+print((w_bold_std/w_bold_mean) * 100)
+ax1.plot(numpy.arange(len(neuron_number)), wo_bold_mean, label="without BOLD recording")
+print((wo_bold_std/wo_bold_mean) * 100)
+
 ax1.set_yscale("log")
 # create a more readable y-axis
 ax1.set_yticks([10**x for x in [0, 0.5, 1.0, 1.5, 2.0, 2.5]])
