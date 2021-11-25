@@ -11,10 +11,10 @@
 """
 General comments:
 
-In advance you need to run a simulation with/without a BOLD recording, e. g.
+In advance you need to run a simulation with/without a BOLD recording with at elast two different numbers of neurons, e. g.
 
-python simulations.py 1 0 1 1 # without
-python simulations.py 1 0 1 2 # with
+python simulations.py 1 0 1 1 # without BOLD recording
+python simulations.py 1 0 1 2 # with BOLD recording
 
 In order to modify the number of neurons, you need to adjust the parameters.py:
 
@@ -33,7 +33,7 @@ number_of_inputs = 10
 labels = [ (x + 0.25*x) for x in neuron_number]
 
 #
-# Load the data from ../perfRaw (see the comments above how to create)
+# Load the data from ../dataRaw (see the comments above how to create)
 #
 import numpy
 
@@ -44,11 +44,11 @@ w_bold_std = numpy.zeros(len(neuron_number))
 wo_bold_std = numpy.zeros(len(neuron_number))
 
 for idx_n, n in enumerate(neuron_number):
-    raw = numpy.recfromtxt("../perfRaw/with_monitor_"+str(n)+"_"+str(number_of_inputs)+"_1threads.csv")
+    raw = numpy.recfromtxt("../dataRaw/perf_with_monitor_"+str(n)+"_"+str(number_of_inputs)+"_1threads.csv")
     w_bold_mean[idx_n] = numpy.mean(raw)
     w_bold_std[idx_n] = numpy.std(raw)
 
-    raw = numpy.recfromtxt("../perfRaw/without_monitor_"+str(n)+"_"+str(number_of_inputs)+"_1threads.csv")
+    raw = numpy.recfromtxt("../dataRaw/perf_without_monitor_"+str(n)+"_"+str(number_of_inputs)+"_1threads.csv")
     wo_bold_mean[idx_n] = numpy.mean(raw)
     wo_bold_std[idx_n] = numpy.std(raw)
 

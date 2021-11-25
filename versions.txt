@@ -1,10 +1,10 @@
 Python:
     3.7.4
 
-ANNarchy (4.7.0b0):
-    commit bfdf0f0b36f23d98e6488b93cf22428929f6eaaf (HEAD -> develop, origin/develop)
-    Author: Helge Dinkelbach <helge.dinkelbach@gmail.com>
-    Date:   Mon Aug 2 13:44:09 2021 +0200
+ANNarchy (4.7.0.1):
+    commit a46d3058582f7dcb9f7a7a44ba46d1ce981afa15
+    Author: Julien Vitay <julien.vitay@informatik.tu-chemnitz.de>
+    Date:   Fri Nov 19 09:20:39 2021 +0100
 
-        Avoid the usage of omp_get_max_threads/omp_set_number_threads.
-        If multiple CPP libraries in one Python-context access the global number of openMP threads, this can lead to unpredicatable segmentation faults.
+        Release 4.7.0.1
+
