@@ -16,6 +16,7 @@ else:
 ### general ANNarchy params
 params['dt'] = 0.1
 params['num_threads'] = 1
+params['measure_time'] = False
 params['optimizeRates'] = ['v1','v1post','v2','v2post'][3]# v1 = optimized input current distribution and number-pre-fix, v2 = optimize weight scalings, post = not fitting but use fitted values
 params['increasingInputs'] = False
 
@@ -82,7 +83,8 @@ params['FS_v_peak'] = 25
 params['input_tau'] = 10000#how many miliseconds to increase input current by the value offset
 
 
-### Populations
+### Population
+params['corE_popsize_default'] = 200
 params['corE_popsize'] = 200
 if params['input']=='Current' and ('v1' in params['optimizeRates']):
     # input current distribution

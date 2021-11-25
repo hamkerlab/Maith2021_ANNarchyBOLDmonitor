@@ -1,6 +1,6 @@
 # Maith2021_ANNarchyBOLDmonitor
 
-Source code of simulations and analyses from Maith, Dinkelbach, Baladron, Vitay & Hamker (2021), *Frontiers in Neuroinformatics*.
+Source code of simulations and analyses from Maith, Dinkelbach, Baladron, Vitay & Hamker (2021), submitted to *Frontiers in Neuroinformatics*.
 
 ## Authors:
 
@@ -23,6 +23,9 @@ Source code of simulations and analyses from Maith, Dinkelbach, Baladron, Vitay 
   - *Fig_Balloon_model_data_ANA.py*
     - analyze data generated with **srcSim**/*Fig_Balloon_model_data.py*
     - loads data from **dataRaw**/, saves results in **results**/Fig_Balloon_model_data/
+  - *BOLD_comp_time.py*
+    - analyze data generated with `BOLDfromDifferentSources` in **srcSim**/*simulations.py* (`params["measure_time"]==True`)
+    - loads data from **dataRaw**/, saves results in **results**/Fig_comp_time/
   - *extras.py*
     - some extra functions available for importing
   - *initialTestofBOLD_ANA.py*
@@ -91,6 +94,7 @@ Figure 4 | *BOLDfromDifferentSources_ANA.py* (function `rate_distribution`) | *s
 Figure 5 | *BOLDfromDifferentSources_ANA.py* (function `with_vs_without_normalization`) | *simulations.py X 1 Y* | X = `input_factor` = 1--resting, 5--pulse; Y = `simID` = (0--39)
 Figure 6 | *BOLDfromDifferntSources_ANA.py* (function `pulses_visualization`) | *simulations.py 5 1 Y* | Y = `simID` = (0--39), lineplots are generated individually
 Figure 7 | *BOLDfromDifferntSources_ANA.py* (function `make_sustained_input_plot`) | *simulations.py 1.2 3 Y* | Y = `simID` = (0--39), lineplots are generated individually
+Figure 8 | *BOLD_comp_time.py* | *simulations.py 1 0 1 1*, *simulations.py 1 0 1 2* | vary number of neurons in *parameters.py*, `params["measure_time"]==True` is necessary
 Figure S1 | *BOLDfromDifferntSources_ANA.py* (function `make_sustained_input_plot`) | *simulations.py 1.2 3 Y* | Y = `simID` = (0--39), Figure 7 and S1 are generated together, lineplots are generated individually
 
 # Platforms
