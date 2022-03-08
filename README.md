@@ -1,6 +1,6 @@
 # Maith2021_ANNarchyBOLDmonitor
 
-Source code of simulations and analyses from Maith, Dinkelbach, Baladron, Vitay & Hamker (2021), submitted to *Frontiers in Neuroinformatics*.
+Source code of simulations and analyses from Maith, O., Dinkelbach, H. Ü., Baladron, J., Vitay, J., & Hamker, F. H. (2022). BOLD Monitoring in the Neural Simulator ANNarchy. *Frontiers in Neuroinformatics*.
 
 ## Authors:
 
